@@ -1,0 +1,59 @@
+services:
+
+  homefront:
+    image: homefront:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homefront
+    restart: unless-stopped
+    volumes:
+      # Persistent config and database
+      - homefront_data:/data
+    environment:
+      - RUST_LOG=homefront=info,tower_http=info
+      - PORT=3000
+    networks:
+      - homefront_net
+    depends_on: []
+    labels:
+      - "com.homefront.service=app"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: homefront_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - homefront_net
+    depends_on:
+      - homefront
+
+  # Local Docker registry — push images here from dev machine,
+  # pull them here on the homelab. Run once, leave it up.
+  registry:
+    image: registry:2
+    container_name: homefront_registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - homefront_net
+
+volumes:
+  homefront_data:
+  caddy_data:
+  caddy_config:
+  registry_data:
+
+networks:
+  homefront_net:
+    driver: bridge

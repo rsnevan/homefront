@@ -1,0 +1,31 @@
+# homefront — example config
+# Copy this to /data/config.toml and fill in your values,
+# OR just run homefront and use the setup wizard at http://your-ip
+
+[app]
+# Name shown in the UI header and browser tab
+name = "My Home"
+# Theme: "dark" | "light" | "auto"
+theme = "dark"
+# Your domain (used by Caddy for TLS) — leave blank for LAN-only
+domain = ""
+
+[ha]
+# Full URL to your Home Assistant instance
+url = "http://192.168.1.42:8123"
+# Long-lived access token — generate in HA → Profile → Security
+token = "YOUR_TOKEN_HERE"
+# Set to true if your HA uses a self-signed certificate
+verify_ssl = false
+
+[auth]
+# Secret for signing JWTs — change this, keep it private
+jwt_secret = "change-me-to-a-long-random-string"
+# How many days owner sessions last before requiring re-login
+session_days = 30
+
+[features]
+# Enable mDNS/subnet discovery in the setup wizard
+discovery_enabled = true
+# Allow guest accounts to be created
+guest_access = true

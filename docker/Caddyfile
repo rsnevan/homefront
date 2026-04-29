@@ -1,0 +1,32 @@
+# Caddyfile for homefront
+# Replace "home.local" with your domain or local hostname.
+# On a local network without a real domain, use an IP or mDNS name.
+
+{
+    # Uncomment to use a real domain with auto HTTPS via Let's Encrypt
+    # email your@email.com
+}
+
+:80 {
+    # Proxy everything to the homefront app
+    reverse_proxy homefront:3000
+
+    # WebSocket support
+    @ws {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @ws homefront:3000
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}
+
+# Uncomment and edit for HTTPS with a real domain:
+# home.yourdomain.com {
+#     reverse_proxy homefront:3000
+#     tls your@email.com
+# }

@@ -311,20 +311,39 @@ public static class WinShell
     [DllImport("user32.dll")] static extern bool LockWorkStation();
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, System.Text.StringBuilder sb, int max);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+    [DllImport("user32.dll")] static extern bool AttachThreadInput(uint a, uint b, bool attach);
+    [DllImport("user32.dll")] static extern bool BringWindowToTop(IntPtr h);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+    [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
     [DllImport("powrprof.dll")] static extern bool SetSuspendState(bool hibernate, bool force, bool disableWake);
     [DllImport("kernel32.dll")] static extern bool GetSystemTimes(out long idle, out long kernel, out long user);
     [StructLayout(LayoutKind.Sequential)] struct MEMSTAT { public uint len, load; public ulong total, avail, tp, ap, tv, av, ext; }
     [DllImport("kernel32.dll")] static extern bool GlobalMemoryStatusEx(ref MEMSTAT m);
 
     /// Windows blocks focus-stealing; a synthetic Alt tap convinces it the user asked for it.
-    public static void Focus(IntPtr h, bool maximize = false)
+    /// If that isn't enough, borrow the foreground window's input queue and flip the window topmost.
+    public static bool Focus(IntPtr h, bool maximize = false)
     {
-        if (h == IntPtr.Zero) return;
+        if (h == IntPtr.Zero) return false;
         keybd_event(0x12, 0, 0, IntPtr.Zero);
         keybd_event(0x12, 0, 2, IntPtr.Zero);
         if (IsIconic(h)) ShowWindow(h, 9);
         if (maximize) ShowWindow(h, 3);
-        SetForegroundWindow(h);
+        if (SetForegroundWindow(h) && GetForegroundWindow() == h) return true;
+
+        var fgThread = GetWindowThreadProcessId(GetForegroundWindow(), out _);
+        var me = GetCurrentThreadId();
+        var attached = fgThread != 0 && fgThread != me && AttachThreadInput(me, fgThread, true);
+        try
+        {
+            const uint NoMoveSize = 0x0001 | 0x0002;
+            SetWindowPos(h, new IntPtr(-1), 0, 0, 0, 0, NoMoveSize);   // topmost
+            SetWindowPos(h, new IntPtr(-2), 0, 0, 0, 0, NoMoveSize);   // and back, now in front
+            BringWindowToTop(h);
+            SetForegroundWindow(h);
+        }
+        finally { if (attached) AttachThreadInput(me, fgThread, false); }
+        return GetForegroundWindow() == h;
     }
 
     public static (string title, string process) Foreground()

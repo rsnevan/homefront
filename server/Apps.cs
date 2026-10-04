@@ -80,8 +80,15 @@ public class Apps
         Process.Start(new ProcessStartInfo(Browser, args) { UseShellExecute = false });
         KioskPage = page;
         KioskChanged?.Invoke(page);
-        await Task.Delay(1500);
-        foreach (var p in KioskProcesses()) { if (p.MainWindowHandle != IntPtr.Zero) { WinShell.Focus(p.MainWindowHandle); break; } }
+        // Brave can take a few seconds to show its window; keep at it until the kiosk is really in front,
+        // otherwise Windows parks it behind and just flashes the taskbar.
+        for (var i = 0; i < 20; i++)
+        {
+            await Task.Delay(500);
+            var h = KioskProcesses().Select(p => p.MainWindowHandle).FirstOrDefault(w => w != IntPtr.Zero);
+            if (h != IntPtr.Zero && WinShell.Focus(h)) { await Task.Delay(800); if (WinShell.Focus(h)) return; }
+        }
+        Log.Warn($"kiosk {page}: couldn't bring the window to the front");
     }
 
     public Task CloseKiosk(bool notify = true)

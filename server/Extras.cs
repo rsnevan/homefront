@@ -59,7 +59,12 @@ public class TvNotices
         var json = payload.ToJsonString().Replace("\"", "\\\"");
         // Windows caps a command line at 32K characters; never let a picture stop the message.
         if (json.Length > 30000) json = new JsonObject { ["message"] = message }.ToJsonString().Replace("\"", "\\\"");
-        try { await _apps.Tv($"-request_with_param system.notifications/createToast \"{json}\""); }
+        try
+        {
+            var reply = await _apps.Tv($"-request_with_param system.notifications/createToast \"{json}\"");
+            if (!reply.Contains("\"returnValue\":true")) Log.Warn($"tv notice refused: {reply.Trim()}");
+            else Log.Info($"TV notice: {message}");
+        }
         catch (Exception e) { Log.Warn($"tv notice: {e.Message}"); }
     }
 }
@@ -154,12 +159,16 @@ public class Cameras
         static int CommonPrefix(string a, string b) { var i = 0; while (i < a.Length && i < b.Length && a[i] == b[i]) i++; return i; }
     }
 
-    async Task AlertTv(string name, string? camera)
-    {
-        byte[]? icon = null;
-        if (camera != null) try { icon = Thumb(await Snapshot(camera), 160); } catch { }
-        await _tv.Show($"{name.Replace(" Motion", "", StringComparison.OrdinalIgnoreCase)}: motion detected", icon);
-    }
+    // LG notices with a picture never get an answer from this TV, so the TV gets text; the snapshot goes to the phone and homefront.
+    Task AlertTv(string name, string? camera) =>
+        _tv.Show($"Motion at the {CameraName(camera) ?? "camera"}");
+
+    static string WithCamera(string s) => s.EndsWith("camera") ? s : s + " camera";
+
+    string? CameraName(string? camera) =>
+        camera != null && _ha.Entities.TryGetValue(camera, out var e) && e.GetProperty("attributes").TryGetProperty("friendly_name", out var n)
+            ? WithCamera(System.Text.RegularExpressions.Regex.Replace(n.GetString() ?? "", @"(?i)\s*(main|sub) ?stream$", "").Trim().ToLowerInvariant())
+            : null;
 
     public async Task<(byte[] bytes, string type)> SnapshotRaw(string id)
     {

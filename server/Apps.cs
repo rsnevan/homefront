@@ -119,8 +119,18 @@ public class Apps
     {
         var psi = new ProcessStartInfo(_cfg.Value.Pc.LgtvCli, args) { UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true };
         using var p = Process.Start(psi)!;
-        var output = await p.StandardOutput.ReadToEndAsync();
-        await p.WaitForExitAsync();
-        return output;
+        // The TV sometimes never answers (e.g. a notice with a picture); don't let that hang the caller.
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        try
+        {
+            var output = await p.StandardOutput.ReadToEndAsync(cts.Token);
+            await p.WaitForExitAsync(cts.Token);
+            return output;
+        }
+        catch (OperationCanceledException)
+        {
+            try { p.Kill(entireProcessTree: true); } catch { }
+            throw new TimeoutException($"The TV didn't answer: {args.Split(' ')[0]}");
+        }
     }
 }

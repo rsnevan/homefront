@@ -215,14 +215,17 @@ export function SceneStrip() {
 
 // ================= now playing =================
 
+// What's playing right now: homefront's TV player or anything else on the HTPC, whichever is playing
+// (a paused one only shows when nothing is playing).
 export function nowPlaying(s) {
-  const p = s.player;
-  if (p && p.status && p.status !== 'stopped') {
+  const p = s.player, m = s.media;
+  const playerOn = p && p.status && p.status !== 'stopped';
+  const mediaOn = m?.active && m.title;
+  if (playerOn && (p.status === 'playing' || !(mediaOn && m.status === 'playing'))) {
     return { kind: 'player', title: p.title, sub: p.subtitle, status: p.status, position: p.position, duration: p.duration, at: p.at,
       art: p.imageId ? jfImg(p.imageId, 'Backdrop', 800) : null, video: true, app: 'Jellyfin on TV', canSeek: true, tracks: p.tracks };
   }
-  const m = s.media;
-  if (m?.active && m.title) {
+  if (mediaOn) {
     return { kind: 'media', title: m.title, sub: m.artist || m.album, status: m.status, position: m.position, duration: m.duration, at: m.updatedAt,
       art: m.artVersion ? `/api/pc/art?v=${m.artVersion}` : null, video: m.isVideo && !m.artVersion, app: m.appName, canSeek: m.canSeek, canPrev: m.canPrev, canNext: m.canNext };
   }

@@ -270,6 +270,17 @@ app.MapGet("/api/pc/art", (HttpContext ctx) =>
     return Results.Bytes(media.Art, media.ArtType ?? "image/png");
 });
 
+// Diagnostics: which apps are making sound right now (owner only).
+app.MapGet("/api/pc/audio", (HttpContext ctx) =>
+{
+    if (!Who(ctx).IsOwner) return OwnerOnly(ctx);
+    return Results.Ok(WinAudio.SessionPeaks().Select(kv =>
+    {
+        string name; try { name = System.Diagnostics.Process.GetProcessById(kv.Key).ProcessName; } catch { name = "?"; }
+        return new { pid = kv.Key, process = name, peak = Math.Round(kv.Value, 4) };
+    }));
+});
+
 app.MapPost("/api/pc/media/{action}", async (string action, SeekReq? r) => Results.Ok(new { ok = await media.Control(action, r?.Position) }));
 
 app.MapPost("/api/pc/volume", (VolReq r) =>
@@ -546,7 +557,7 @@ _ = Task.Run(async () =>
             await sleepTimer.Tick();
             if (tick % 10 == 0) await prayerWatch.Tick();
             await bridge.Tick(Stats.Current);
-            if (tick % 2 == 0) await media.Refresh();
+            await media.Refresh();
         }
         catch (Exception e) { Log.Warn($"loop: {e.Message}"); }
         await Task.Delay(1500, stop);

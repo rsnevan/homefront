@@ -72,6 +72,88 @@ public static class WinAudio
     }
 
     public static void Mute(bool m) { var g = Guid.Empty; Endpoint().SetMute(m, ref g); }
+
+    // ---- per-app audio sessions: who is actually making sound ----
+
+    [Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionManager2
+    {
+        int GetAudioSessionControl(IntPtr guid, uint flags, out IntPtr control);
+        int GetSimpleAudioVolume(IntPtr guid, uint flags, out IntPtr volume);
+        [PreserveSig] int GetSessionEnumerator(out IAudioSessionEnumerator sessions);
+    }
+
+    [Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionEnumerator
+    {
+        [PreserveSig] int GetCount(out int count);
+        [PreserveSig] int GetSession(int index, out IAudioSessionControl2 session);
+    }
+
+    [Guid("BFB7FF88-7239-4FC9-8FA2-07C950BE9C6D"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionControl2
+    {
+        // IAudioSessionControl
+        [PreserveSig] int GetState(out int state);
+        int GetDisplayName(out IntPtr name);
+        int SetDisplayName(IntPtr name, IntPtr ctx);
+        int GetIconPath(out IntPtr path);
+        int SetIconPath(IntPtr path, IntPtr ctx);
+        int GetGroupingParam(out Guid g);
+        int SetGroupingParam(IntPtr g, IntPtr ctx);
+        int RegisterAudioSessionNotification(IntPtr n);
+        int UnregisterAudioSessionNotification(IntPtr n);
+        // IAudioSessionControl2
+        int GetSessionIdentifier(out IntPtr id);
+        int GetSessionInstanceIdentifier(out IntPtr id);
+        [PreserveSig] int GetProcessId(out uint pid);
+    }
+
+    [Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioMeterInformation
+    {
+        [PreserveSig] int GetPeakValue(out float peak);
+    }
+
+    /// Peak level (0..1) of every process currently holding an active audio session.
+    public static Dictionary<int, float> SessionPeaks()
+    {
+        var result = new Dictionary<int, float>();
+        IMMDeviceEnumerator? en = null; IMMDevice? dev = null; IAudioSessionManager2? mgr = null; IAudioSessionEnumerator? list = null;
+        try
+        {
+            en = (IMMDeviceEnumerator)new MMDeviceEnumeratorCom();
+            if (en.GetDefaultAudioEndpoint(0, 1, out dev) != 0) return result;
+            var iid = typeof(IAudioSessionManager2).GUID;
+            if (dev.Activate(ref iid, 23, IntPtr.Zero, out var o) != 0) return result;
+            mgr = (IAudioSessionManager2)o;
+            if (mgr.GetSessionEnumerator(out list) != 0) return result;
+            list.GetCount(out var n);
+            for (var i = 0; i < n; i++)
+            {
+                if (list.GetSession(i, out var s) != 0) continue;
+                try
+                {
+                    if (s.GetState(out var state) == 0 && state == 1 && s.GetProcessId(out var pid) == 0 && pid != 0)
+                    {
+                        ((IAudioMeterInformation)s).GetPeakValue(out var peak);
+                        result[(int)pid] = Math.Max(peak, result.GetValueOrDefault((int)pid));
+                    }
+                }
+                catch { }
+                finally { Marshal.ReleaseComObject(s); }
+            }
+        }
+        catch { }
+        finally
+        {
+            if (list != null) Marshal.ReleaseComObject(list);
+            if (mgr != null) Marshal.ReleaseComObject(mgr);
+            if (dev != null) Marshal.ReleaseComObject(dev);
+            if (en != null) Marshal.ReleaseComObject(en);
+        }
+        return result;
+    }
 }
 
 // ---------------- Input (SendInput) ----------------

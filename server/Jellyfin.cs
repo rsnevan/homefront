@@ -88,6 +88,32 @@ public class Jellyfin
 
     public async Task<JsonElement> RawItem(string id) => await Get($"/Users/{User}/Items/{id}?Fields={Fields}");
 
+    /// Item ids matching a name, best match first.
+    public async Task<List<string>> Find(string name, string type)
+    {
+        var r = await Get($"/Users/{User}/Items?SearchTerm={Uri.EscapeDataString(name)}&IncludeItemTypes={type}&Recursive=true&Limit=5");
+        var items = r.GetProperty("Items").EnumerateArray().ToList();
+        return items.OrderByDescending(i => string.Equals(i.GetProperty("Name").GetString(), name, StringComparison.OrdinalIgnoreCase))
+                    .Select(i => i.GetProperty("Id").GetString()!).ToList();
+    }
+
+    public async Task<string?> EpisodeImageId(string seriesId, int season, int episode)
+    {
+        var r = await Get($"/Shows/{seriesId}/Episodes?UserId={User}&Season={season}");
+        foreach (var e in r.GetProperty("Items").EnumerateArray())
+            if (e.TryGetProperty("IndexNumber", out var n) && n.ValueKind == JsonValueKind.Number && n.GetInt32() == episode
+                && e.TryGetProperty("ImageTags", out var tags) && tags.TryGetProperty("Primary", out _))
+                return e.GetProperty("Id").GetString();
+        return null;
+    }
+
+    public async Task<(byte[], string)?> Image(string id, string type, int width)
+    {
+        using var res = await Raw.GetAsync($"{Url}/Items/{id}/Images/{type}?fillWidth={width}&quality=85");
+        if (!res.IsSuccessStatusCode) return null;
+        return (await res.Content.ReadAsByteArrayAsync(), res.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
+    }
+
     public async Task<List<(string title, string? series, DateTimeOffset added)>> RecentlyAdded(int limit)
     {
         var r = await Get($"/Users/{User}/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=Movie,Episode&Recursive=true&Limit={limit}&Fields=DateCreated");

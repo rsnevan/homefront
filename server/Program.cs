@@ -17,7 +17,7 @@ var cfg = new ConfigStore(dataDir);
 var hub = new Hub();
 var ha = new HomeAssistant(cfg);
 var jf = new Jellyfin(cfg);
-var media = new WinMedia();
+var media = new WinMedia { Finder = new ArtFinder(jf) };
 var apps = new Apps(cfg, dataDir);
 var feeds = new Feeds(cfg);
 var lights = new Lights(ha, cfg);

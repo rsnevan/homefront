@@ -227,7 +227,7 @@ export function nowPlaying(s) {
   }
   if (mediaOn) {
     return { kind: 'media', title: m.title, sub: m.artist || m.album, status: m.status, position: m.position, duration: m.duration, at: m.updatedAt,
-      art: m.artVersion ? `/api/pc/art?v=${m.artVersion}` : null, video: m.isVideo && !m.artVersion, app: m.appName, canSeek: m.canSeek, canPrev: m.canPrev, canNext: m.canNext };
+      art: m.artVersion ? `/api/pc/art?v=${m.artVersion}` : null, video: m.isVideo, app: m.appName, canSeek: m.canSeek, canPrev: m.canPrev, canNext: m.canNext };
   }
   return null;
 }

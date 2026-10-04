@@ -23,6 +23,26 @@ public class WinMedia
     public byte[]? Art { get; private set; }
     public string? ArtType { get; private set; }
     public event Action<MediaState>? Changed;
+    public ArtFinder? Finder { get; set; }
+
+    // Artwork for sources that don't provide any, looked up once per track in the background.
+    string? _artKey, _artVer;
+    string? ArtFor(bool video, string? title, string? artist)
+    {
+        var key = $"{video}|{title}|{artist}";
+        if (key == _artKey) return _artVer;
+        _artKey = key; _artVer = null; Art = null;
+        if (Finder == null || string.IsNullOrWhiteSpace(title)) return null;
+        _ = Task.Run(async () =>
+        {
+            var r = await Finder.Find(video, title, artist);
+            if (_artKey != key || r == null) return;
+            Art = r.Value.bytes; ArtType = r.Value.type;
+            _artVer = Convert.ToHexString(SHA1.HashData(Art))[..12];
+            await Refresh();
+        });
+        return null;
+    }
 
     static readonly MediaState Empty = new(false, null, null, null, null, null, "stopped", false, 0, 0, 0, null, false, false, false);
 
@@ -115,22 +135,23 @@ public class WinMedia
             switch (pick.src)
             {
                 case AudioApp a:
-                    Watch(null); _window = null; _audioApp = a; Art = null;
+                    Watch(null); _window = null; _audioApp = a;
                     var status = _override.TryGetValue(a.Key, out var ov) && ov.until > DateTime.UtcNow ? ov.status : pick.status;
+                    var aart = a.Title != null ? ArtFor(a.IsVideo, a.Title, a.Artist) : null;
                     Publish(new MediaState(true, a.Key, a.App, a.Title ?? a.App, a.Artist, null, status, a.IsVideo, 0, 0,
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), null, true, true, false));
+                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), aart, true, true, false));
                     break;
                 case PlayerWin w:
-                    Watch(null); _window = w; Art = null;
+                    Watch(null); _window = w;
                     Publish(new MediaState(true, "window:" + w.Proc, w.App, w.Title, null, null, pick.status, true, 0, 0,
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), null, true, true, false));
+                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), ArtFor(true, w.Title, null), true, true, false));
                     break;
                 case GlobalSystemMediaTransportControlsSession s:
-                    _window = null; Watch(s);
+                    _window = null; Watch(s); _artKey = null;
                     await PublishSession(s);
                     break;
                 default:
-                    Watch(null); _window = null; Art = null;
+                    Watch(null); _window = null; Art = null; _artKey = null;
                     Publish(Empty);
                     break;
             }

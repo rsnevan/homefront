@@ -29,7 +29,7 @@ export function Settings() {
   const save = async () => {
     setSaving(true);
     try {
-      await api('/api/settings', { homeName: cfg.homeName, ownerName: cfg.ownerName, location: cfg.location, prayer: cfg.prayer, cinema: cfg.cinema, rooms: cfg.rooms, shortcuts: cfg.shortcuts, tvPcInput: cfg.tvPcInput });
+      await api('/api/settings', { homeName: cfg.homeName, ownerName: cfg.ownerName, location: cfg.location, prayer: cfg.prayer, cinema: cfg.cinema, rooms: cfg.rooms, shortcuts: cfg.shortcuts, tvPcInput: cfg.tvPcInput, player: cfg.player, camera: cfg.camera });
       toast('Settings saved'); setDirty(false);
     } catch (e) { toast(e.message, true); } finally { setSaving(false); }
   };
@@ -70,7 +70,25 @@ export function Settings() {
           <div class="field wide"><label for="pm">Calculation method</label>
             <select id="pm" class="input" value=${cfg.prayer.method} onChange=${e => upd({ prayer: { ...cfg.prayer, method: +e.target.value } })}>${METHODS.map(([v, n]) => html`<option value=${v}>${n}</option>`)}</select></div>
           <div class="field"><label for="so">Sehri ends before Fajr (minutes)</label><input id="so" class="input num" type="number" min="0" max="30" value=${cfg.prayer.sehriOffsetMinutes} onInput=${e => upd({ prayer: { ...cfg.prayer, sehriOffsetMinutes: +e.target.value } })} /></div>
-        </div>`}
+        </div>
+        <div class="set-row"><div class="txt"><b>Notice on the TV at prayer times</b><span>A small message the TV shows on top of whatever is on screen.</span></div>
+          <${Toggle} label="Notice on the TV at prayer times" checked=${cfg.prayer.tvNotice} onChange=${v => upd({ prayer: { ...cfg.prayer, tvNotice: v } })} /></div>
+        <div class="set-row"><div class="txt"><b>Pause playback at prayer times</b><span>Pauses Jellyfin, Spotify, browser video and VLC.</span></div>
+          <${Toggle} label="Pause playback at prayer times" checked=${cfg.prayer.pauseAtPrayer} onChange=${v => upd({ prayer: { ...cfg.prayer, pauseAtPrayer: v } })} /></div>
+        <div class="set-row"><div class="txt"><b>Iftar countdown on the TV</b><span>During Ramadan, 15 minutes before Maghrib the TV switches to a countdown, or shows a notice if something is playing.</span></div>
+          <${Toggle} label="Iftar countdown on the TV" checked=${cfg.prayer.iftarOnTv} onChange=${v => upd({ prayer: { ...cfg.prayer, iftarOnTv: v } })} /></div>`}
+      </section>
+
+      <section class="panel set-sec">
+        <h2 class="h-sec">Playback</h2>
+        <div class="set-row"><div class="txt"><b>Subtitles on by default</b><span>The TV player picks your language when a title has it. Change tracks any time from the CC button.</span></div>
+          <${Toggle} label="Subtitles on by default" checked=${cfg.player.subtitlesOn} onChange=${v => upd({ player: { ...cfg.player, subtitlesOn: v } })} /></div>
+        ${cfg.player.subtitlesOn && html`<div class="field" style="max-width:320px"><label for="sl">Subtitle language</label>
+          <select id="sl" class="input" value=${cfg.player.subtitleLanguage} onChange=${e => upd({ player: { ...cfg.player, subtitleLanguage: e.target.value } })}>
+            ${[['eng', 'English'], ['ara', 'Arabic'], ['urd', 'Urdu'], ['hin', 'Hindi'], ['afr', 'Afrikaans'], ['zul', 'Zulu'], ['fra', 'French'], ['spa', 'Spanish'], ['por', 'Portuguese']].map(([v, n]) => html`<option value=${v}>${n}</option>`)}
+          </select></div>`}
+        <div class="set-row"><div class="txt"><b>Camera motion on the TV</b><span>While something's playing, motion on a camera pops up on the TV with a snapshot.</span></div>
+          <${Toggle} label="Camera motion on the TV" checked=${cfg.camera.motionOnTv} onChange=${v => upd({ camera: { ...cfg.camera, motionOnTv: v } })} /></div>
       </section>
 
       <section class="panel set-sec" id="rooms">

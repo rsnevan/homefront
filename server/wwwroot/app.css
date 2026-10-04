@@ -578,3 +578,29 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .player .upnext { position: absolute; right: 5vw; bottom: 16vh; background: rgba(11, 18, 32, 0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 18px 22px; font-size: min(1.4vw, 2.4vh); max-width: 30vw; }
 .player .upnext b { display: block; font: 500 min(1.8vw, 3vh)/1.2 var(--display); margin-top: 4px; }
+
+/* subtitles on the TV: big, legible from the couch, on a soft backing */
+.player video::cue { font: 500 min(3.2vw, 4.4vh)/1.35 var(--font); color: #fff; background: rgba(0, 0, 0, 0.55); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.player-notice {
+  position: absolute; top: 6vh; left: 50%; transform: translateX(-50%); padding: 1.2vh 2.2vw; border-radius: 999px;
+  background: rgba(11, 18, 32, 0.88); border: 1px solid rgba(230, 236, 244, 0.16); color: var(--chalk); font-size: min(1.6vw, 2.6vh);
+}
+
+/* camera */
+.camera { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--r-sm); overflow: hidden; background: #000; border: 1px solid var(--line); }
+.camera img { width: 100%; height: 100%; object-fit: cover; }
+.camera .tag { position: absolute; left: 10px; top: 10px; padding: 4px 10px; border-radius: 99px; background: var(--scrim); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.camera-big { width: 100%; border-radius: var(--r-md); background: #000; display: block; }
+
+/* track picker */
+.track-list { display: grid; gap: 4px; }
+.track { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: var(--r-sm); text-align: left; min-height: 48px; }
+.track:hover { background: var(--hover); }
+.track[aria-checked="true"] { background: var(--raised-2); color: var(--text); }
+.track[aria-checked="true"] svg.i { color: var(--accent); }
+.track small { color: var(--muted); font-size: 12px; }
+.icon-btn.cc-on { color: var(--accent); }
+.chip.on svg { color: var(--accent); }
+
+/* very narrow phones: five player buttons must fit in 256px */
+@media (max-width: 380px) { .np-controls { gap: 4px; } .np-controls .icon-btn.big { width: 56px; height: 56px; } }

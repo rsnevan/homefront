@@ -6,7 +6,7 @@ maximize minimize log-out user users link qr-code clock sunrise sunset moon-star
 memory-stick hard-drive monitor-off refresh-cw lock rotate-ccw send circle-dot wifi-off music hand move palette thermometer
 external-link trash-2 copy info triangle-alert loader-circle ellipsis square rewind fast-forward list library clapperboard
 bed-double sun-dim app-window mouse-pointer-click scan sliders-horizontal shield-check timer house-wifi zap tv-minimal monitor-play
-gauge ticket square-arrow-out-up-right delete space type undo-2 maximize-2 hourglass circle-check star calendar`.split(/\s+/).filter(Boolean);
+gauge ticket square-arrow-out-up-right delete space type undo-2 maximize-2 hourglass circle-check star calendar captions video cctv bell`.split(/\s+/).filter(Boolean);
 const out = {}; const missing = [];
 for (const n of names) {
   const p = `node_modules/lucide-static/icons/${n}.svg`;

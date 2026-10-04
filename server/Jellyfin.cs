@@ -88,6 +88,17 @@ public class Jellyfin
 
     public async Task<JsonElement> RawItem(string id) => await Get($"/Users/{User}/Items/{id}?Fields={Fields}");
 
+    public async Task<List<(string title, string? series, DateTimeOffset added)>> RecentlyAdded(int limit)
+    {
+        var r = await Get($"/Users/{User}/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=Movie,Episode&Recursive=true&Limit={limit}&Fields=DateCreated");
+        return r.GetProperty("Items").EnumerateArray()
+            .Where(i => i.TryGetProperty("DateCreated", out _))
+            .Select(i => (i.GetProperty("Name").GetString() ?? "",
+                          i.TryGetProperty("SeriesName", out var s) ? s.GetString() : null,
+                          DateTimeOffset.Parse(i.GetProperty("DateCreated").GetString()!)))
+            .ToList();
+    }
+
     /// Next episode after this one (for autoplay), or null.
     public async Task<string?> NextEpisode(string episodeId)
     {
@@ -129,17 +140,95 @@ public class Jellyfin
 
     // ---- Playback (homefront kiosk player on the HTPC) ----
 
-    public async Task<object> PlaybackSource(string itemId)
+    static readonly HashSet<string> TextSubs = ["subrip", "srt", "ass", "ssa", "webvtt", "vtt", "mov_text", "text", "ttml", "microdvd", "smi"];
+
+    static string LanguageName(string? code)
+    {
+        if (string.IsNullOrEmpty(code)) return "Unknown";
+        try
+        {
+            var c = System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.NeutralCultures)
+                .FirstOrDefault(x => x.ThreeLetterISOLanguageName == code || x.TwoLetterISOLanguageName == code || x.ThreeLetterWindowsLanguageName.Equals(code, StringComparison.OrdinalIgnoreCase));
+            if (c != null) return c.EnglishName;
+        }
+        catch { }
+        return code switch { "chi" => "Chinese", "fre" => "French", "ger" => "German", "dut" => "Dutch", "gre" => "Greek", "per" => "Persian", _ => code };
+    }
+
+    // Track titles are often release-group noise; keep only the parts that help pick a track.
+    static string TrackQualifier(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return "";
+        var t = title.ToLowerInvariant();
+        var bits = new List<string>();
+        if (t.Contains("sdh") || t.Contains("hearing")) bits.Add("SDH");
+        if (t.Contains("latin")) bits.Add("Latin American");
+        else if (t.Contains("brasil") || t.Contains("brazil")) bits.Add("Brazil");
+        else if (t.Contains("portugal") || t.Contains("european")) bits.Add("Europe");
+        if (t.Contains("simplified")) bits.Add("Simplified");
+        if (t.Contains("traditional")) bits.Add("Traditional");
+        if (t.Contains("commentary")) bits.Add("Commentary");
+        if (t.Contains("signs") || t.Contains("songs")) bits.Add("Signs & songs");
+        return bits.Count > 0 ? $" ({string.Join(", ", bits)})" : "";
+    }
+
+    /// Subtitle and audio tracks of an item, plus which subtitle to show by default.
+    static (List<object> subs, List<object> audio, int? defaultSub, int? defaultAudio) Tracks(string itemId, string msId, JsonElement source, string prefLang)
+    {
+        var subs = new List<object>(); var audio = new List<object>();
+        int? defSub = null, defAudio = null, firstPref = null, firstForced = null;
+        if (!source.TryGetProperty("MediaStreams", out var streams)) return (subs, audio, null, null);
+        foreach (var s in streams.EnumerateArray())
+        {
+            var type = s.GetProperty("Type").GetString();
+            var index = s.GetProperty("Index").GetInt32();
+            string? Str(string k) => s.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+            bool Bool(string k) => s.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.True;
+            var lang = Str("Language");
+            var name = LanguageName(lang) + TrackQualifier(Str("Title"));
+            if (type == "Subtitle")
+            {
+                var codec = (Str("Codec") ?? "").ToLowerInvariant();
+                var isText = TextSubs.Contains(codec) || Bool("IsTextSubtitleStream");
+                var forced = Bool("IsForced");
+                subs.Add(new
+                {
+                    index, name = name + (forced ? " (forced)" : ""), lang, codec, isText, forced, isDefault = Bool("IsDefault"),
+                    vtt = isText ? $"/jf/Videos/{itemId}/{msId}/Subtitles/{index}/0/Stream.vtt" : null,
+                });
+                if (Bool("IsDefault") && defSub == null) defSub = index;
+                if (lang == prefLang && !forced && firstPref == null) firstPref = index;
+                if (forced && lang == prefLang && firstForced == null) firstForced = index;
+            }
+            else if (type == "Audio")
+            {
+                var ch = s.TryGetProperty("Channels", out var c) && c.ValueKind == JsonValueKind.Number ? c.GetInt32() : 0;
+                audio.Add(new { index, name = name + (ch >= 6 ? " 5.1" : ch == 2 ? " stereo" : ""), lang, isDefault = Bool("IsDefault") });
+                if (Bool("IsDefault") && defAudio == null) defAudio = index;
+            }
+        }
+        // Preferred language first, then whatever the file marks as default.
+        return (subs, audio, firstPref ?? firstForced ?? defSub, defAudio);
+    }
+
+    public string HlsUrl(string itemId, string msId, string playSession, int? audio, int? burnSub) =>
+        // Copy streams the browser can decode, let Jellyfin (Quick Sync) transcode the rest.
+        $"/jf/Videos/{itemId}/master.m3u8?MediaSourceId={msId}&PlaySessionId={playSession}&DeviceId=homefront-htpc" +
+        "&VideoCodec=h264,hevc&AudioCodec=aac,mp3,ac3,eac3&AllowVideoStreamCopy=true&AllowAudioStreamCopy=true" +
+        "&TranscodingMaxAudioChannels=6&MaxStreamingBitrate=60000000&SegmentContainer=mp4&MinSegments=1&BreakOnNonKeyFrames=true" +
+        "&h264-profile=high,main,baseline&h264-level=52&hevc-profile=main,main10&RequireAvc=false" +
+        (audio is { } a ? $"&AudioStreamIndex={a}" : "") +
+        // Picture-based subtitles (DVD/PGS) can't be a browser track, so Jellyfin draws them into the video.
+        (burnSub is { } b ? $"&SubtitleStreamIndex={b}&SubtitleMethod=Encode&AllowVideoStreamCopy=false" : "");
+
+    public async Task<object> PlaybackSource(string itemId, int? audio = null, int? burnSub = null, string prefLang = "eng", bool subsOn = true)
     {
         var item = await RawItem(itemId);
         var source = item.GetProperty("MediaSources")[0];
-        var msId = source.GetProperty("Id").GetString();
+        var msId = source.GetProperty("Id").GetString()!;
         var playSession = Guid.NewGuid().ToString("N");
-        // Copy streams the browser can decode, let Jellyfin (Quick Sync) transcode the rest.
-        var hls = $"/jf/Videos/{itemId}/master.m3u8?MediaSourceId={msId}&PlaySessionId={playSession}&DeviceId=homefront-htpc" +
-                  "&VideoCodec=h264,hevc&AudioCodec=aac,mp3,ac3,eac3&AllowVideoStreamCopy=true&AllowAudioStreamCopy=true" +
-                  "&TranscodingMaxAudioChannels=6&MaxStreamingBitrate=60000000&SegmentContainer=mp4&MinSegments=1&BreakOnNonKeyFrames=true" +
-                  "&h264-profile=high,main,baseline&h264-level=52&hevc-profile=main,main10&RequireAvc=false";
+        var (subs, audios, defSub, defAudio) = Tracks(itemId, msId, source, prefLang);
+        var hls = HlsUrl(itemId, msId, playSession, audio, burnSub);
         double resume = item.TryGetProperty("UserData", out var ud) && ud.TryGetProperty("PlaybackPositionTicks", out var p) ? p.GetInt64() / 10_000_000.0 : 0;
         var runtime = item.TryGetProperty("RunTimeTicks", out var rt) ? rt.GetInt64() / 10_000_000.0 : 0;
         if (runtime > 0 && resume > runtime * 0.95) resume = 0;
@@ -147,6 +236,8 @@ public class Jellyfin
         {
             itemId, mediaSourceId = msId, playSessionId = playSession, hls, resume, runtime,
             item = SlimOne(item),
+            subtitles = subs, audio = audios,
+            defaultSub = subsOn ? defSub : null, defaultAudio = defAudio, audioIndex = audio ?? defAudio, burnSub,
         };
     }
 

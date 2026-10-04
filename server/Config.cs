@@ -16,6 +16,8 @@ public class AppConfig
     public PrayerConfig Prayer { get; set; } = new();
     public CinemaConfig Cinema { get; set; } = new();
     public PcConfig Pc { get; set; } = new();
+    public PlayerConfig Player { get; set; } = new();
+    public CameraConfig Camera { get; set; } = new();
 
     public List<Room> Rooms { get; set; } =
     [
@@ -82,6 +84,20 @@ public class PrayerConfig
     public bool Enabled { get; set; } = true;
     public int Method { get; set; } = 1;          // Aladhan: 1 = University of Islamic Sciences, Karachi
     public int SehriOffsetMinutes { get; set; } = 5;
+    public bool TvNotice { get; set; } = false;        // small notice on the TV at each prayer time
+    public bool PauseAtPrayer { get; set; } = false;   // pause whatever is playing
+    public bool IftarOnTv { get; set; } = false;       // Ramadan: Iftar countdown on the TV 15 minutes before Maghrib
+}
+
+public class PlayerConfig
+{
+    public bool SubtitlesOn { get; set; } = true;
+    public string SubtitleLanguage { get; set; } = "eng";   // ISO 639-2
+}
+
+public class CameraConfig
+{
+    public bool MotionOnTv { get; set; } = true;         // motion while something is playing -> notice on the TV
 }
 
 public class CinemaConfig

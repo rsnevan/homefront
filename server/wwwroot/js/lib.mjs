@@ -65,6 +65,7 @@ export function connect() {
       case 'config': store.set({ home: d.home, shortcuts: d.shortcuts, rooms: d.rooms }); break;
       case 'tvEntity': store.set({ tvEntity: d || null }); break;
       case 'kiosk': store.set({ kiosk: d || null }); break;
+      case 'motion': toast(`Motion: ${d.name.replace(/ motion$/i, '')}`); break;
       default: store.set({ [t]: d });
     }
   };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'preact/hooks';
 import {
-  html, Icon, store, useStore, api, act, haCall, toast, navigate, useNow, useScreen, useThrottled,
+  html, Icon, store, useStore, api, act, haCall, toast, navigate, useNow, useScreen, useThrottled, useVisible,
   dur, runtime, hhmm, until, wx, prayerInfo, lightName, isOn, pct, supportsCt, supportsColor, supportsDim, glow,
   jfImg, thumbFor, epLabel, send,
 } from './lib.mjs';
@@ -219,7 +219,7 @@ export function nowPlaying(s) {
   const p = s.player;
   if (p && p.status && p.status !== 'stopped') {
     return { kind: 'player', title: p.title, sub: p.subtitle, status: p.status, position: p.position, duration: p.duration, at: p.at,
-      art: p.imageId ? jfImg(p.imageId, 'Backdrop', 800) : null, video: true, app: 'Jellyfin on TV', canSeek: true };
+      art: p.imageId ? jfImg(p.imageId, 'Backdrop', 800) : null, video: true, app: 'Jellyfin on TV', canSeek: true, tracks: p.tracks };
   }
   const m = s.media;
   if (m?.active && m.title) {
@@ -241,6 +241,7 @@ export function NowPlaying({ horizontal }) {
   const np = nowPlaying(s);
   const pos = usePosition(np);
   const seekRef = useRef();
+  const [picker, setPicker] = useState(false);
   if (!np) return html`
     <div class=${'np np-empty' + (horizontal ? ' horizontal' : '')}>
       <div class="np-art placeholder"><${Icon} name="music" /></div>
@@ -270,17 +271,20 @@ export function NowPlaying({ horizontal }) {
             <div class="np-time"><span>${dur(pos)}</span><span>-${dur(np.duration - pos)}</span></div>
           </div>`}
       </div>
-      <${Controls} np=${np} ctl=${ctl} playing=${playing} small=${horizontal} />
+      <${Controls} np=${np} ctl=${ctl} playing=${playing} small=${horizontal} onTracks=${() => setPicker(true)} />
+      ${picker && html`<${TracksSheet} tracks=${np.tracks} onClose=${() => setPicker(false)} />`}
     </div>`;
 }
 
-function Controls({ np, ctl, playing, small }) {
+function Controls({ np, ctl, playing, small, onTracks }) {
+  const t = np.tracks, hasTracks = t && (t.subtitles?.length > 0 || t.audio?.length > 1);
   const back = np.kind === 'player' ? () => act('/api/player/seek', { position: Math.max(0, np.position - 10) }) : () => ctl('prev');
   const fwd = np.kind === 'player' ? () => act('/api/player/seek', { position: np.position + 30 }) : () => ctl('next');
   return html`<div class="np-controls">
     <button class="icon-btn plain" onClick=${back} aria-label=${np.kind === 'player' ? 'Back 10 seconds' : 'Previous'} disabled=${np.kind === 'media' && !np.canPrev}><${Icon} name=${np.kind === 'player' ? 'rotate-ccw' : 'skip-back'} /></button>
     <button class=${'icon-btn on' + (small ? '' : ' big')} onClick=${() => ctl(playing ? 'pause' : 'play')} aria-label=${playing ? 'Pause' : 'Play'}><${Icon} name=${playing ? 'pause' : 'play'} /></button>
     <button class="icon-btn plain" onClick=${fwd} aria-label=${np.kind === 'player' ? 'Forward 30 seconds' : 'Next'} disabled=${np.kind === 'media' && !np.canNext}><${Icon} name=${np.kind === 'player' ? 'fast-forward' : 'skip-forward'} /></button>
+    ${hasTracks && html`<button class=${'icon-btn plain' + (t.sub != null ? ' cc-on' : '')} onClick=${onTracks} aria-label="Subtitles and audio"><${Icon} name="captions" /></button>`}
     ${np.kind === 'player' && html`<button class="icon-btn plain" onClick=${() => act('/api/player/stop', {})} aria-label="Stop"><${Icon} name="square" /></button>`}
   </div>`;
 }
@@ -311,6 +315,7 @@ export function TvPanel() {
       <button class="chip" onClick=${() => act('/api/tv/pc', {}, 'Switched to the HTPC')}><${Icon} name="monitor" size=${16} />HTPC input</button>
       <button class="chip" onClick=${() => act('/api/tv/screen_off', {}, 'Screen off, sound stays on')}><${Icon} name="monitor-off" size=${16} />Screen off</button>
       <button class="chip" onClick=${() => act('/api/tv/screen_on', {})}><${Icon} name="monitor-play" size=${16} />Screen on</button>
+      <${SleepChip} />
     </div>`;
 }
 
@@ -498,4 +503,74 @@ export function ItemSheet({ id, onClose }) {
           </div>`}
       </div>`}
   </${Sheet}>`;
+}
+
+// ================= subtitles & audio =================
+
+export function TracksSheet({ tracks, onClose }) {
+  const t = tracks || {};
+  const pick = (cmd, index) => act('/api/player/' + cmd, { index });
+  return html`<${Sheet} onClose=${onClose} label="Subtitles and audio">
+    <h2 class="h-sec" style="font-size:20px;margin-bottom:14px;margin-right:48px">Subtitles</h2>
+    <div class="track-list" role="radiogroup" aria-label="Subtitles">
+      <button class="track" role="radio" aria-checked=${t.sub == null} onClick=${() => pick('subs', null)}><span>Off</span>${t.sub == null && html`<${Icon} name="check" size=${18} />`}</button>
+      ${(t.subtitles || []).map(s => html`
+        <button class="track" role="radio" aria-checked=${t.sub === s.index} onClick=${() => pick('subs', s.index)}>
+          <span>${s.name}</span><span class="row" style="gap:10px">${!s.isText && html`<small>Drawn into the video</small>`}${t.sub === s.index && html`<${Icon} name="check" size=${18} />`}</span>
+        </button>`)}
+    </div>
+    ${t.audio?.length > 1 && html`
+      <h2 class="h-sec" style="font-size:20px;margin:24px 0 14px">Audio</h2>
+      <div class="track-list" role="radiogroup" aria-label="Audio">
+        ${t.audio.map(a => html`<button class="track" role="radio" aria-checked=${t.audioIndex === a.index} onClick=${() => pick('audio', a.index)}><span>${a.name}</span>${t.audioIndex === a.index && html`<${Icon} name="check" size=${18} />`}</button>`)}
+      </div>`}
+  </${Sheet}>`;
+}
+
+// ================= sleep timer =================
+
+export function SleepChip() {
+  const s = useStore();
+  const now = useNow(15000);
+  const [open, setOpen] = useState(false);
+  const ends = s.timer?.endsAt;
+  const left = ends ? Math.max(0, Math.ceil((ends - now.getTime()) / 60000)) : 0;
+  const set = m => act('/api/timer', { minutes: m }, m ? `Everything turns off in ${m} minutes` : 'Sleep timer cancelled').then(() => setOpen(false));
+  return html`
+    <button class=${'chip' + (ends ? ' on' : '')} onClick=${() => setOpen(true)}><${Icon} name="timer" size=${16} />${ends ? `Off in ${left} min` : 'Sleep timer'}</button>
+    ${open && html`<${Sheet} onClose=${() => setOpen(false)} label="Sleep timer">
+      <h2 class="h-sec" style="font-size:20px;margin-bottom:6px;margin-right:48px">Sleep timer</h2>
+      <p class="muted" style="margin:0 0 18px">Pauses what's playing, turns the TV off and fades the lights out. The TV shows a warning a minute before.</p>
+      <div class="row wrap" style="gap:8px">
+        ${[15, 30, 45, 60, 90, 120].map(m => html`<button class="chip" style="height:44px;padding:0 18px" onClick=${() => set(m)}>${m < 60 ? `${m} min` : `${m / 60} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}`}</button>`)}
+      </div>
+      ${ends && html`<div class="row between" style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px">
+        <span class="muted">Turning off in ${left} min</span><button class="btn sm danger" onClick=${() => set(null)}>Cancel timer</button></div>`}
+    </${Sheet}>`}`;
+}
+
+// ================= cameras =================
+
+export function CameraPanel() {
+  const s = useStore();
+  const ref = useRef();
+  const visible = useVisible(ref);
+  const [big, setBig] = useState(null);
+  const ids = s.cameras || [];
+  if (!ids.length) return null;
+  const name = id => s.entities[id]?.attributes?.friendly_name || id.replace('camera.', '').replace(/_/g, ' ');
+  return html`
+    <div ref=${ref} class="stack">
+      ${ids.map(id => html`
+        <button class="camera" onClick=${() => setBig(id)} aria-label=${`Open ${name(id)}`}>
+          ${visible ? html`<img src=${`/api/camera/${id}/stream`} alt=${name(id)} />` : html`<div class="skeleton" style="position:absolute;inset:0;border-radius:0"></div>`}
+          <span class="tag"><span class="dot live"></span>${name(id)}</span>
+        </button>`)}
+    </div>
+    ${big && html`<${Sheet} onClose=${() => setBig(null)} wide label=${name(big)}>
+      <div style="padding:20px">
+        <h2 class="h-sec" style="font-size:20px;margin-bottom:14px;margin-right:48px">${name(big)}</h2>
+        <img class="camera-big" src=${`/api/camera/${big}/stream`} alt=${name(big)} />
+      </div>
+    </${Sheet}>`}`;
 }

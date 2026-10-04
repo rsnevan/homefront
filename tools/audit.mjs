@@ -124,7 +124,8 @@ async function stressFn(LONG) {
   for (const id of Object.keys(entities)) if (id.startsWith('light.')) entities[id] = { ...entities[id], state: 'on', attributes: { ...entities[id].attributes, brightness: 200, color_temp_kelvin: 2700, color_mode: 'color_temp' } };
   m.store.set({
     connected: true, entities, cinema: { ...s.cinema, mode: 'playing' }, kiosk: 'player',
-    player: { status: 'playing', itemId: 'x', title: LONG, subtitle: 'S12 E104  ' + LONG, imageId: null, position: 3000, duration: 9000, at: Date.now() },
+    player: { status: 'playing', itemId: 'x', title: LONG, subtitle: 'S12 E104  ' + LONG, imageId: null, position: 3000, duration: 9000, at: Date.now(), tracks: { subtitles: [{ index: 2, name: 'English', isText: true }, { index: 3, name: 'Spanish (Latin American)', isText: true }, { index: 4, name: 'English (SDH)', isText: false }], audio: [{ index: 1, name: 'English 5.1' }, { index: 5, name: 'Japanese stereo' }], sub: 2, audioIndex: 1 } },
+    timer: { endsAt: Date.now() + 45 * 60000 },
     stats: { ...s.stats, foreground: { title: LONG + ' — Brave', process: 'brave' } },
   });
 }
@@ -161,7 +162,9 @@ const STATES = [
   ['home', go('/', '.plan .room')],
   ['home-busy', stressed('/', '.plan .room')],
   ['room-sheet', async p => { await stressed('/', '.plan .room')(p); await p.locator('.room').first().click(); await p.waitForSelector('.sheet .light-row'); }],
-  ['sleep-confirm', async p => { await go('/', '.plan .room')(p); await p.getByRole('button', { name: 'Sleep' }).click(); await p.waitForSelector('.sheet'); }],
+  ['tracks-sheet', async p => { await stressed('/', '.plan .room')(p); await p.getByRole('button', { name: 'Subtitles and audio' }).first().click(); await p.waitForSelector('.track-list'); }],
+  ['timer-sheet', async p => { await stressed('/', '.plan .room')(p); await p.locator('.chip', { hasText: 'Off in' }).first().click(); await p.waitForSelector('.sheet'); }],
+  ['sleep-confirm', async p => { await go('/', '.plan .room')(p); await p.getByRole('button', { name: 'Sleep', exact: true }).click(); await p.waitForSelector('.sheet'); }],
   ['remote', stressed('/remote', '.mirror')],
   ['library', go('/library', '.shelf .tile')],
   ['library-movies', async p => { await go('/library', '.lib-tabs')(p); await p.getByRole('button', { name: 'Movies' }).click(); await p.waitForSelector('.grid-posters .tile'); }],

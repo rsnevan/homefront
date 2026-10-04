@@ -24,6 +24,7 @@ public class HomeAssistant
     public string? Version { get; private set; }
     public event Action<string, JsonElement?>? EntityChanged;
     public event Action<bool>? ConnectionChanged;
+    public event Func<JsonElement, Task>? CommandReceived;
 
     public HomeAssistant(ConfigStore cfg) => _cfg = cfg;
 
@@ -73,6 +74,8 @@ public class HomeAssistant
         Entities.Clear();
         foreach (var s in states.EnumerateArray()) if (Relevant(s.GetProperty("entity_id").GetString()!)) Entities[s.GetProperty("entity_id").GetString()!] = s.Clone();
         await Command(new JsonObject { ["type"] = "subscribe_events", ["event_type"] = "state_changed" });
+        // Scripts and voice assistants in HA drive homefront by firing this event.
+        await Command(new JsonObject { ["type"] = "subscribe_events", ["event_type"] = "homefront_command" });
         Log.Info($"HA connected at {url} (v{Version}), {Entities.Count} entities");
         SetConnected(true);
         await pump;
@@ -93,7 +96,14 @@ public class HomeAssistant
             }
             else if (type == "event")
             {
-                var data = m.GetProperty("event").GetProperty("data");
+                var ev = m.GetProperty("event");
+                var data = ev.GetProperty("data");
+                if (ev.GetProperty("event_type").GetString() == "homefront_command")
+                {
+                    var copy = data.Clone();
+                    _ = Task.Run(() => CommandReceived?.Invoke(copy));
+                    continue;
+                }
                 var id = data.GetProperty("entity_id").GetString()!;
                 if (!Relevant(id)) continue;
                 var ns = data.GetProperty("new_state");

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { html, Icon, useStore, useNow, api, navigate, greeting, dateLong, hhmm, wx, prayerInfo, until, isOn } from '../lib.mjs';
-import { Plan, RoomSheet, SceneStrip, NowPlaying, TvPanel, PcPanel, Launch, Weather, Prayer, Tile, ItemSheet } from '../components.mjs';
+import { Plan, RoomSheet, SceneStrip, NowPlaying, TvPanel, PcPanel, Launch, Weather, Prayer, Tile, ItemSheet, CameraPanel } from '../components.mjs';
 
 let cachedShelf = null;
 
@@ -35,6 +35,7 @@ export function Home() {
           ${pi?.next && html`<span><${Icon} name="moon-star" size=${18} />${pi.next.name} ${pi.next.time}, ${pi.next.tomorrow ? 'tomorrow' : until(pi.mins)}</span>`}
           ${lightsOn > 0 && html`<span><${Icon} name="lightbulb" size=${18} />${lightsOn} ${lightsOn === 1 ? 'light' : 'lights'} on</span>`}
           ${s.cinema?.mode && s.cinema.mode !== 'idle' && html`<span><span class="dot live"></span>Lights following the movie</span>`}
+          ${s.timer?.endsAt && html`<span><${Icon} name="timer" size=${18} />Off in ${Math.max(0, Math.ceil((s.timer.endsAt - now.getTime()) / 60000))} min</span>`}
         </div>
       </div>
       <div class="clock">${hhmm(now)}<small>${dateLong(now)}</small></div>
@@ -56,6 +57,8 @@ export function Home() {
         <${PcPanel} />
       </section>
       <section class="panel span-4" aria-labelledby="h-launch"><div class="sec-head"><h2 class="h-sec" id="h-launch">Open on the TV</h2></div><${Launch} /></section>
+
+      ${s.cameras?.length > 0 && html`<section class="panel span-6" aria-labelledby="h-cam"><div class="sec-head"><h2 class="h-sec" id="h-cam">${s.cameras.length > 1 ? 'Cameras' : 'Camera'}</h2></div><${CameraPanel} /></section>`}
 
       ${s.jellyfin?.ok && html`
         <section class="span-12" aria-labelledby="h-cont" style="margin-top:12px">

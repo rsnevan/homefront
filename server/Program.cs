@@ -25,6 +25,13 @@ var scenes = new Scenes(lights, cfg, apps, media);
 var cinema = new Cinema(lights, cfg, media);
 var player = new PlayerState();
 cinema.PlayerStatus = () => player.Status;
+string? tvEntityRef() => TvEntity();
+var tvNotices = new TvNotices(apps, ha, tvEntityRef);
+var sleepTimer = new SleepTimer(scenes, tvNotices);
+var prayerWatch = new PrayerWatch(feeds, cfg, tvNotices, media, hub, apps, () => player.Status);
+bool Watching() => player.Status == "playing" || (media.State.Active && media.State.IsVideo && media.State.Status == "playing");
+var cameras = new Cameras(ha, cfg, tvNotices, hub, Watching);
+var bridge = new HaBridge(ha, media, jf, sleepTimer, () => player.Status);
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = baseDir, WebRootPath = Path.Combine(baseDir, "wwwroot") });
 builder.Logging.ClearProviders();
@@ -72,6 +79,8 @@ object Snapshot(Principal who) => new
     tvEntity = TvEntity(),
     shortcuts = cfg.Value.Shortcuts,
     screen = new { w = WinScreen.Size.w, h = WinScreen.Size.h },
+    timer = sleepTimer.View(),
+    cameras = cameras.Ids.ToList(),
 };
 
 object RoomsView()
@@ -342,12 +351,13 @@ app.MapPost("/api/jf/play", async (PlayReq r) =>
     return Results.Ok();
 });
 
-app.MapGet("/api/player/source", async (string id) => Results.Ok(await jf.PlaybackSource(id)));
+app.MapGet("/api/player/source", async (string id, int? audio, int? burn) =>
+    Results.Ok(await jf.PlaybackSource(id, audio, burn, cfg.Value.Player.SubtitleLanguage, cfg.Value.Player.SubtitlesOn)));
 
-app.MapPost("/api/player/{cmd}", async (string cmd, SeekReq? r) =>
+app.MapPost("/api/player/{cmd}", async (string cmd, PlayerCmd? r) =>
 {
     if (cmd == "stop") { await apps.CloseKiosk(); return Results.Ok(); }
-    hub.ToPlayers("cmd", new { cmd, position = r?.Position });
+    hub.ToPlayers("cmd", new { cmd, position = r?.Position, index = r?.Index });
     return Results.Ok();
 });
 
@@ -377,6 +387,52 @@ hub.PlayerReport += async m =>
     }
 };
 
+// ---------------- sleep timer ----------------
+
+app.MapPost("/api/timer", (TimerReq r) => { sleepTimer.Set(r.Minutes); return Results.Ok(sleepTimer.View()); });
+sleepTimer.Changed += () => hub.Broadcast("timer", sleepTimer.View());
+
+// ---------------- cameras (via Home Assistant) ----------------
+
+app.MapGet("/api/camera/{id}/snapshot", async (HttpContext ctx, string id) =>
+{
+    if (!id.StartsWith("camera.") || !ha.Entities.ContainsKey(id)) return Results.NotFound();
+    var (bytes, type) = await cameras.SnapshotRaw(id);
+    ctx.Response.Headers.CacheControl = "no-store";
+    return Results.Bytes(bytes, type);
+});
+
+app.MapGet("/api/camera/{id}/stream", async (HttpContext ctx, string id) =>
+{
+    if (!id.StartsWith("camera.") || !ha.Entities.ContainsKey(id)) { ctx.Response.StatusCode = 404; return; }
+    using var res = await cameras.StreamOf($"/api/camera_proxy_stream/{id}", ct: ctx.RequestAborted);
+    ctx.Response.ContentType = res.Content.Headers.ContentType?.ToString() ?? "multipart/x-mixed-replace";
+    ctx.Response.Headers.CacheControl = "no-store";
+    try { await res.Content.CopyToAsync(ctx.Response.Body, ctx.RequestAborted); } catch (OperationCanceledException) { }
+});
+
+// ---------------- commands from Home Assistant (scripts, Assist, Siri via the HA app) ----------------
+
+ha.CommandReceived += async d =>
+{
+    string S(string k) => d.TryGetProperty(k, out var v) ? v.ToString() : "";
+    Log.Info($"HA command: {d.GetRawText()}");
+    try
+    {
+        switch (S("command"))
+        {
+            case "scene": await scenes.Run(S("scene")); break;
+            case "sleep_timer": sleepTimer.Set(int.TryParse(S("minutes"), out var m) ? m : null); break;
+            case "ambient": await apps.OpenKiosk("ambient", "/ambient"); break;
+            case "close_kiosk": await apps.CloseKiosk(); break;
+            case "open": await apps.OpenUrl(S("url")); break;
+            case "pause": await media.Control("pause"); hub.ToPlayers("cmd", new { cmd = "pause" }); break;
+            case "play": await media.Control("play"); hub.ToPlayers("cmd", new { cmd = "play" }); break;
+        }
+    }
+    catch (Exception e) { Log.Warn($"HA command failed: {e.Message}"); }
+};
+
 // ---------------- settings ----------------
 
 app.MapGet("/api/settings", async (HttpContext ctx) =>
@@ -386,7 +442,7 @@ app.MapGet("/api/settings", async (HttpContext ctx) =>
     return Results.Ok(new
     {
         homeName = c.HomeName, ownerName = c.OwnerName, username = c.Auth.Username,
-        location = c.Location, prayer = c.Prayer, cinema = c.Cinema, rooms = c.Rooms, shortcuts = c.Shortcuts,
+        location = c.Location, prayer = c.Prayer, cinema = c.Cinema, rooms = c.Rooms, shortcuts = c.Shortcuts, player = c.Player, camera = c.Camera,
         tvEntity = c.Ha.TvEntity, tvPcInput = c.Pc.TvPcInput,
         lights = lights.All.Select(l => new { id = l.GetProperty("entity_id").GetString(), name = l.GetProperty("attributes").TryGetProperty("friendly_name", out var n) ? n.GetString() : null }),
         status = new { ha = ha.Connected, haUrl = ha.BaseUrl, haVersion = ha.Version, jellyfin = await jf.Ping() },
@@ -404,6 +460,8 @@ app.MapPost("/api/settings", (HttpContext ctx, JsonElement body) =>
         if (Get<string>("ownerName") is { Length: > 0 } on) c.OwnerName = on.Trim();
         if (Get<LocationConfig>("location") is { } l) c.Location = l;
         if (Get<PrayerConfig>("prayer") is { } p) c.Prayer = p;
+        if (Get<PlayerConfig>("player") is { } pl) c.Player = pl;
+        if (Get<CameraConfig>("camera") is { } cam) c.Camera = cam;
         if (Get<CinemaConfig>("cinema") is { } ci) c.Cinema = ci;
         if (Get<List<Room>>("rooms") is { } r) c.Rooms = r.Where(x => !string.IsNullOrWhiteSpace(x.Name)).ToList();
         if (Get<List<Homefront.Shortcut>>("shortcuts") is { } s) c.Shortcuts = s.Where(x => !string.IsNullOrWhiteSpace(x.Name) && !string.IsNullOrWhiteSpace(x.Url)).ToList();
@@ -485,6 +543,9 @@ _ = Task.Run(async () =>
             var vs = JsonSerializer.Serialize(v);
             if (vs != (lastVol as string)) { lastVol = vs; hub.Broadcast("volume", v); }
             if (tick++ % 2 == 0) { Stats.Sample(); hub.Broadcast("stats", Stats.Current); }
+            await sleepTimer.Tick();
+            if (tick % 10 == 0) await prayerWatch.Tick();
+            await bridge.Tick(Stats.Current);
             if (tick % 2 == 0) await media.Refresh();
         }
         catch (Exception e) { Log.Warn($"loop: {e.Message}"); }
@@ -503,6 +564,8 @@ record HaCall(string Domain, string Service, JsonElement? Data, JsonElement? Tar
 record RoomLightReq(string Room, bool? On, int? Brightness, int? Kelvin);
 record TvReq(int? Level, bool? Muted, string? Source);
 record SeekReq(double? Position);
+record PlayerCmd(double? Position, int? Index);
+record TimerReq(int? Minutes);
 record VolReq(int? Level, bool? Muted);
 record OpenReq(string Url);
 record PlayReq(string Id, bool? FromStart);
@@ -519,8 +582,10 @@ class PlayerState
     public string? ImageId;
     public DateTime LastReport = DateTime.MinValue;
 
+    public JsonElement? Tracks;
     public void Update(JsonElement m)
     {
+        if (m.TryGetProperty("tracks", out var tr)) Tracks = tr.Clone();
         string? S(string k) => m.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
         double N(string k) => m.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : 0;
         Status = S("status") ?? "stopped";
@@ -529,9 +594,9 @@ class PlayerState
         Position = N("position"); Duration = N("duration");
     }
 
-    public void Clear() { Status = "stopped"; ItemId = null; Title = null; Subtitle = null; Position = Duration = 0; }
+    public void Clear() { Status = "stopped"; ItemId = null; Title = null; Subtitle = null; Position = Duration = 0; Tracks = null; }
 
-    public object View() => new { status = Status, itemId = ItemId, title = Title, subtitle = Subtitle, imageId = ImageId, position = Position, duration = Duration, at = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+    public object View() => new { status = Status, itemId = ItemId, title = Title, subtitle = Subtitle, imageId = ImageId, position = Position, duration = Duration, tracks = Tracks, at = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
 }
 
 static class Stats

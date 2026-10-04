@@ -22,7 +22,7 @@ public class Apps
     /// Streaming sites go into the everyday Brave profile so existing logins (Netflix, DStv...) work.
     public async Task OpenUrl(string url)
     {
-        if (url == "app:spotify") { await OpenSpotify(); return; }
+        if (url.StartsWith("app:", StringComparison.OrdinalIgnoreCase)) { await OpenApp(url[4..].ToLowerInvariant()); return; }
         if (!Uri.TryCreate(url, UriKind.Absolute, out var u) || (u.Scheme != "http" && u.Scheme != "https"))
             throw new ArgumentException("Only http(s) links can be opened");
         await CloseKiosk();
@@ -30,17 +30,27 @@ public class Apps
         await FocusBrowser(maximize: true);
     }
 
-    async Task OpenSpotify()
+    // Desktop apps a shortcut can open as "app:<name>": process to look for, and how to start it.
+    static readonly Dictionary<string, (string process, string[] start)> KnownApps = new()
     {
-        var running = Process.GetProcessesByName("Spotify").FirstOrDefault(p => p.MainWindowHandle != IntPtr.Zero);
+        ["spotify"] = ("Spotify", ["spotify:"]),
+        ["iptvnator"] = ("IPTVnator", [@"%LOCALAPPDATA%\Programs\iptvnator\IPTVnator.exe", @"%ProgramFiles%\IPTVnator\IPTVnator.exe"]),
+        ["vlc"] = ("vlc", [@"%ProgramFiles%\VideoLAN\VLC\vlc.exe", @"%ProgramFiles(x86)%\VideoLAN\VLC\vlc.exe"]),
+        ["jellyfin"] = ("Jellyfin Media Player", [@"%ProgramFiles%\Jellyfin\Jellyfin Media Player\JellyfinMediaPlayer.exe"]),
+    };
+
+    async Task OpenApp(string name)
+    {
+        if (!KnownApps.TryGetValue(name, out var app)) throw new ArgumentException($"Unknown app '{name}'");
+        await CloseKiosk();
+        Process? Window() => Process.GetProcessesByName(app.process).FirstOrDefault(p => p.MainWindowHandle != IntPtr.Zero);
+        var running = Window();
         if (running == null)
         {
-            Process.Start(new ProcessStartInfo("spotify:") { UseShellExecute = true });
-            for (var i = 0; i < 20 && running == null; i++)
-            {
-                await Task.Delay(500);
-                running = Process.GetProcessesByName("Spotify").FirstOrDefault(p => p.MainWindowHandle != IntPtr.Zero);
-            }
+            var target = app.start.Select(Environment.ExpandEnvironmentVariables).FirstOrDefault(s => s.EndsWith(':') || File.Exists(s))
+                         ?? throw new FileNotFoundException($"{name} doesn't seem to be installed on the HTPC");
+            Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+            for (var i = 0; i < 30 && running == null; i++) { await Task.Delay(500); running = Window(); }
         }
         if (running != null) WinShell.Focus(running.MainWindowHandle, maximize: true);
     }

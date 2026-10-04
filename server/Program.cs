@@ -435,6 +435,14 @@ ha.CommandReceived += async d =>
             case "scene": await scenes.Run(S("scene")); break;
             case "sleep_timer": sleepTimer.Set(int.TryParse(S("minutes"), out var m) ? m : null); break;
             case "ambient": await apps.OpenKiosk("ambient", "/ambient"); break;
+            // Coming home: wake the TV on the HTPC input with the clock showing, unless something is already on screen.
+            case "welcome":
+                if (apps.KioskPage == null && !(media.State.Active && media.State.Status == "playing"))
+                {
+                    try { await apps.Tv("-poweron"); await apps.Tv($"-sethdmi {cfg.Value.Pc.TvPcInput}"); } catch (Exception e) { Log.Warn($"welcome tv: {e.Message}"); }
+                    await apps.OpenKiosk("ambient", "/ambient");
+                }
+                break;
             case "close_kiosk": await apps.CloseKiosk(); break;
             case "open": await apps.OpenUrl(S("url")); break;
             case "pause": await media.Control("pause"); hub.ToPlayers("cmd", new { cmd = "pause" }); break;

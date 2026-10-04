@@ -104,7 +104,7 @@ export function Remote() {
 
   return html`
     <div class="sec-head" style="margin-bottom:18px"><h1 class="h-page">Remote</h1>
-      <span class="muted small">${s.stats?.foreground?.title || ''}</span></div>
+      <span class="muted small ellipsis remote-fg">${s.stats?.foreground?.title || ''}</span></div>
     <div class="remote">
       <div>
         <div ref=${mirrorRef} class=${'mirror' + (mode === 'pad' ? ' pad' : '')}
@@ -117,7 +117,7 @@ export function Remote() {
           <button class="chip" aria-pressed=${mode === 'tap'} onClick=${() => setMode('tap')}><${Icon} name="mouse-pointer-click" size=${16} />Tap to click</button>
           <button class="chip" aria-pressed=${mode === 'pad'} onClick=${() => setMode('pad')}><${Icon} name="move" size=${16} />Touchpad</button>
           <button class="chip" aria-pressed=${hd} onClick=${() => setHd(!hd)}>Sharper preview</button>
-          <span class="muted small" style="margin-left:auto">${mode === 'tap' ? 'Hold to right-click. Two fingers scroll.' : 'Two-finger tap right-clicks.'}</span>
+          <span class="muted small mirror-hint">${mode === 'tap' ? 'Hold to right-click. Two fingers scroll.' : 'Two-finger tap right-clicks.'}</span>
         </div>
         <form class="send-link" onSubmit=${typeIt} style="margin-top:14px">
           <input class="input" placeholder="Type on the TV" value=${text} onInput=${e => setText(e.target.value)} aria-label="Text to type on the HTPC" autocomplete="off" autocapitalize="off" />

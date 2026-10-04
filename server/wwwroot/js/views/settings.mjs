@@ -67,7 +67,7 @@ export function Settings() {
         <div class="set-row"><div class="txt"><b>Prayer times</b><span>Next prayer on the home screen. Sehri and Iftar appear automatically during Ramadan.</span></div>
           <${Toggle} label="Prayer times" checked=${cfg.prayer.enabled} onChange=${v => upd({ prayer: { ...cfg.prayer, enabled: v } })} /></div>
         ${cfg.prayer.enabled && html`<div class="form-grid">
-          <div class="field" style="grid-column:span 2"><label for="pm">Calculation method</label>
+          <div class="field wide"><label for="pm">Calculation method</label>
             <select id="pm" class="input" value=${cfg.prayer.method} onChange=${e => upd({ prayer: { ...cfg.prayer, method: +e.target.value } })}>${METHODS.map(([v, n]) => html`<option value=${v}>${n}</option>`)}</select></div>
           <div class="field"><label for="so">Sehri ends before Fajr (minutes)</label><input id="so" class="input num" type="number" min="0" max="30" value=${cfg.prayer.sehriOffsetMinutes} onInput=${e => upd({ prayer: { ...cfg.prayer, sehriOffsetMinutes: +e.target.value } })} /></div>
         </div>`}
@@ -78,7 +78,7 @@ export function Settings() {
           <button class="btn sm" onClick=${() => upd({ rooms: [...cfg.rooms, { name: 'New room', icon: 'lamp', lights: [] }] })}><${Icon} name="plus" size=${16} />Add room</button></div>
         <div class="list-edit">
           ${cfg.rooms.map((r, i) => html`<div class="row">
-            <select class="input" style="width:64px;padding:0 8px" aria-label="Icon" value=${r.icon} onChange=${e => upd({ rooms: cfg.rooms.map((x, j) => j === i ? { ...x, icon: e.target.value } : x) })}>
+            <select class="input" style="width:64px;flex:none;padding:0 8px" aria-label="Icon" value=${r.icon} onChange=${e => upd({ rooms: cfg.rooms.map((x, j) => j === i ? { ...x, icon: e.target.value } : x) })}>
               ${ROOM_ICONS.map(ic => html`<option value=${ic}>${ic.replace('-', ' ')}</option>`)}</select>
             <input class="input" aria-label="Room name" value=${r.name} onInput=${e => upd({ rooms: cfg.rooms.map((x, j) => j === i ? { ...x, name: e.target.value } : x) })} />
             <button class="icon-btn plain" aria-label="Move up" disabled=${i === 0} onClick=${() => { const a = [...cfg.rooms]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; upd({ rooms: a }); }}><${Icon} name="chevron-up" /></button>
@@ -91,7 +91,7 @@ export function Settings() {
           <div class="list-edit">
             ${cfg.lights.map(l => html`<div class="row between">
               <span class="grow ellipsis">${l.name || l.id}</span>
-              <select class="input" style="width:200px" value=${assigned(l.id)} onChange=${e => assign(l.id, e.target.value)}>
+              <select class="input" style="width:min(200px, 55%)" value=${assigned(l.id)} onChange=${e => assign(l.id, e.target.value)}>
                 <option value="">By name (automatic)</option>${cfg.rooms.map(r => html`<option value=${r.name}>${r.name}</option>`)}</select>
             </div>`)}
           </div>`}

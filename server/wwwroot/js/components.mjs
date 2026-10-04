@@ -24,7 +24,7 @@ export function Range({ value, min = 0, max = 100, step = 1, onInput, onChange, 
 export const Toggle = ({ checked, onChange, label }) => html`
   <label class="toggle"><input type="checkbox" role="switch" checked=${!!checked} aria-label=${label} onChange=${e => onChange(e.target.checked)} /><span></span></label>`;
 
-export function Sheet({ onClose, children, wide, label }) {
+export function Sheet({ onClose, children, wide, label, noClose }) {
   const ref = useRef();
   useEffect(() => {
     const k = e => e.key === 'Escape' && onClose();
@@ -37,14 +37,14 @@ export function Sheet({ onClose, children, wide, label }) {
   return html`
     <div class="sheet-scrim" onClick=${e => e.target === e.currentTarget && onClose()}>
       <div class=${'sheet' + (wide ? ' wide' : '')} role="dialog" aria-modal="true" aria-label=${label} tabindex="-1" ref=${ref}>
-        <button class="icon-btn sheet-close plain" onClick=${onClose} aria-label="Close"><${Icon} name="x" /></button>
+        ${!noClose && html`<button class="icon-btn sheet-close plain" onClick=${onClose} aria-label="Close"><${Icon} name="x" /></button>`}
         ${children}
       </div>
     </div>`;
 }
 
 export function Confirm({ title, body, action, danger, onConfirm, onClose }) {
-  return html`<${Sheet} onClose=${onClose} label=${title}>
+  return html`<${Sheet} onClose=${onClose} label=${title} noClose>
     <h2 class="h-sec" style="font-size:20px;margin-bottom:8px">${title}</h2>
     <p class="muted" style="margin:0 0 22px">${body}</p>
     <div class="row" style="justify-content:flex-end">
@@ -269,16 +269,15 @@ export function NowPlaying({ horizontal }) {
             </div>
             <div class="np-time"><span>${dur(pos)}</span><span>-${dur(np.duration - pos)}</span></div>
           </div>`}
-        ${horizontal && html`<${Controls} np=${np} ctl=${ctl} playing=${playing} small />`}
       </div>
-      ${!horizontal && html`<${Controls} np=${np} ctl=${ctl} playing=${playing} />`}
+      <${Controls} np=${np} ctl=${ctl} playing=${playing} small=${horizontal} />
     </div>`;
 }
 
 function Controls({ np, ctl, playing, small }) {
   const back = np.kind === 'player' ? () => act('/api/player/seek', { position: Math.max(0, np.position - 10) }) : () => ctl('prev');
   const fwd = np.kind === 'player' ? () => act('/api/player/seek', { position: np.position + 30 }) : () => ctl('next');
-  return html`<div class="np-controls" style=${small ? 'justify-content:flex-start;margin-top:10px' : ''}>
+  return html`<div class="np-controls">
     <button class="icon-btn plain" onClick=${back} aria-label=${np.kind === 'player' ? 'Back 10 seconds' : 'Previous'} disabled=${np.kind === 'media' && !np.canPrev}><${Icon} name=${np.kind === 'player' ? 'rotate-ccw' : 'skip-back'} /></button>
     <button class=${'icon-btn on' + (small ? '' : ' big')} onClick=${() => ctl(playing ? 'pause' : 'play')} aria-label=${playing ? 'Pause' : 'Play'}><${Icon} name=${playing ? 'pause' : 'play'} /></button>
     <button class="icon-btn plain" onClick=${fwd} aria-label=${np.kind === 'player' ? 'Forward 30 seconds' : 'Next'} disabled=${np.kind === 'media' && !np.canNext}><${Icon} name=${np.kind === 'player' ? 'fast-forward' : 'skip-forward'} /></button>
@@ -419,9 +418,9 @@ export function Prayer() {
     ${info.hijri && html`<div class="muted small" style="margin-top:6px">${info.hijri.day} ${info.hijri.monthName} ${info.hijri.year}</div>`}
     <div class="timeline" aria-label="Today's prayer times">
       <div class="track"><div class="daylight" style=${`left:${sunrisePct}%;width:${sunsetPct - sunrisePct}%`}></div></div>
-      ${info.list.map(p => html`
+      ${info.list.map((p, i) => html`
         <span class=${'tick' + (p.key === info.next.key && !info.next.tomorrow ? ' next' : '')} style=${`left:${dayPct(p.at)}%`}></span>
-        <span class=${'label' + (p.key === info.next.key && !info.next.tomorrow ? ' next' : '')} style=${`left:${Math.min(95, Math.max(5, dayPct(p.at)))}%`}>${p.name}</span>`)}
+        <span class=${'label' + (i % 2 ? ' up' : '') + (p.key === info.next.key && !info.next.tomorrow ? ' next' : '')} style=${`left:${Math.min(95, Math.max(5, dayPct(p.at)))}%`}>${p.name}</span>`)}
       <span class="now" style=${`left:${dayPct(now)}%`}></span>
     </div>
     ${info.ramadan && html`
@@ -460,11 +459,13 @@ export function ItemSheet({ id, onClose }) {
 
   const it = data?.item;
   const backdrop = it && (it.hasBackdrop ? jfImg(it.id, 'Backdrop', 1280) : it.parentBackdropId ? jfImg(it.parentBackdropId, 'Backdrop', 1280) : null);
+  const poster = it && !backdrop && (it.hasPrimary ? jfImg(it.id, 'Primary', 400) : null);
   const nextEp = eps?.find(e => !e.played) || eps?.[0];
   return html`<${Sheet} onClose=${onClose} wide label=${it?.name || 'Details'}>
     ${!it ? html`<div style="padding:28px"><div class="skeleton" style="height:280px"></div></div>` : html`
-      <div class="detail-hero">${backdrop && html`<img src=${backdrop} alt="" />`}<div class="veil"></div></div>
-      <div class="detail-body">
+      ${backdrop && html`<div class="detail-hero"><img src=${backdrop} alt="" /><div class="veil"></div></div>`}
+      <div class=${'detail-body' + (backdrop ? '' : ' plain')}>
+        ${poster && html`<img class="detail-poster" src=${poster} alt="" />`}
         <h2>${it.type === 'Episode' ? it.seriesName : it.name}</h2>
         <div class="facts">
           ${it.type === 'Episode' && html`<span>${epLabel(it)}  ${it.name}</span>`}

@@ -147,7 +147,7 @@ public class Cameras
         _lastAlert = DateTime.UtcNow;
         var name = attrs.TryGetProperty("friendly_name", out var fn) ? fn.GetString() ?? "Camera" : "Camera";
         var camera = CameraFor(id);
-        _hub.Broadcast("motion", new { sensor = id, name, camera });
+        _hub.Broadcast("motion", new { sensor = id, name = CameraName(camera) ?? name, camera });
         if (_cfg.Value.Camera.MotionOnTv && _watching()) _ = AlertTv(name, camera);
     }
 
@@ -161,13 +161,12 @@ public class Cameras
 
     // LG notices with a picture never get an answer from this TV, so the TV gets text; the snapshot goes to the phone and homefront.
     Task AlertTv(string name, string? camera) =>
-        _tv.Show($"Motion at the {CameraName(camera) ?? "camera"}");
+        _tv.Show($"Motion: {CameraName(camera) ?? name}");
 
-    static string WithCamera(string s) => s.EndsWith("camera") ? s : s + " camera";
-
+    // "Living Room Cam mainStream" -> "Living Room Cam"
     string? CameraName(string? camera) =>
         camera != null && _ha.Entities.TryGetValue(camera, out var e) && e.GetProperty("attributes").TryGetProperty("friendly_name", out var n)
-            ? WithCamera(System.Text.RegularExpressions.Regex.Replace(n.GetString() ?? "", @"(?i)\s*(main|sub) ?stream$", "").Trim().ToLowerInvariant())
+            ? System.Text.RegularExpressions.Regex.Replace(n.GetString() ?? "", @"(?i)\s*(main|sub) ?stream$", "").Trim()
             : null;
 
     public async Task<(byte[] bytes, string type)> SnapshotRaw(string id)

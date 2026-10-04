@@ -556,7 +556,7 @@ export function CameraPanel() {
   const ref = useRef();
   const visible = useVisible(ref);
   const [big, setBig] = useState(null);
-  const ids = s.cameras || [];
+  const ids = Object.keys(s.entities).filter(k => k.startsWith('camera.'));
   if (!ids.length) return null;
   const name = id => s.entities[id]?.attributes?.friendly_name || id.replace('camera.', '').replace(/_/g, ' ');
   return html`

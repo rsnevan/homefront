@@ -58,7 +58,7 @@ export function Home() {
       </section>
       <section class="panel span-4" aria-labelledby="h-launch"><div class="sec-head"><h2 class="h-sec" id="h-launch">Open on the TV</h2></div><${Launch} /></section>
 
-      ${s.cameras?.length > 0 && html`<section class="panel span-6" aria-labelledby="h-cam"><div class="sec-head"><h2 class="h-sec" id="h-cam">${s.cameras.length > 1 ? 'Cameras' : 'Camera'}</h2></div><${CameraPanel} /></section>`}
+      ${Object.keys(s.entities).some(k => k.startsWith('camera.')) && html`<section class="panel span-6" aria-labelledby="h-cam"><div class="sec-head"><h2 class="h-sec" id="h-cam">${Object.keys(s.entities).filter(k => k.startsWith('camera.')).length > 1 ? 'Cameras' : 'Camera'}</h2></div><${CameraPanel} /></section>`}
 
       ${s.jellyfin?.ok && html`
         <section class="span-12" aria-labelledby="h-cont" style="margin-top:12px">

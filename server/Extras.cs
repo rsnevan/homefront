@@ -51,12 +51,14 @@ public class TvNotices
 
     public bool TvOn => _tvEntity() is { } id && _ha.Entities.TryGetValue(id, out var e) && e.GetProperty("state").GetString() is "on" or "playing" or "paused" or "idle";
 
-    public async Task Show(string message, byte[]? png = null)
+    public async Task Show(string message, byte[]? jpeg = null)
     {
         if (!TvOn) return;
         var payload = new JsonObject { ["message"] = message };
-        if (png != null) { payload["iconData"] = Convert.ToBase64String(png); payload["iconExtension"] = "png"; }
+        if (jpeg != null) { payload["iconData"] = Convert.ToBase64String(jpeg); payload["iconExtension"] = "jpg"; }
         var json = payload.ToJsonString().Replace("\"", "\\\"");
+        // Windows caps a command line at 32K characters; never let a picture stop the message.
+        if (json.Length > 30000) json = new JsonObject { ["message"] = message }.ToJsonString().Replace("\"", "\\\"");
         try { await _apps.Tv($"-request_with_param system.notifications/createToast \"{json}\""); }
         catch (Exception e) { Log.Warn($"tv notice: {e.Message}"); }
     }
@@ -155,7 +157,7 @@ public class Cameras
     async Task AlertTv(string name, string? camera)
     {
         byte[]? icon = null;
-        if (camera != null) try { icon = Thumb(await Snapshot(camera), 200); } catch { }
+        if (camera != null) try { icon = Thumb(await Snapshot(camera), 160); } catch { }
         await _tv.Show($"{name.Replace(" Motion", "", StringComparison.OrdinalIgnoreCase)}: motion detected", icon);
     }
 
@@ -184,8 +186,12 @@ public class Cameras
         var h = (int)(width * (double)src.Height / src.Width);
         using var bmp = new Bitmap(width, h);
         using (var g = Graphics.FromImage(bmp)) { g.InterpolationMode = InterpolationMode.HighQualityBicubic; g.DrawImage(src, 0, 0, width, h); }
+        // Small JPEG: it travels to the TV inside a command-line argument.
+        var enc = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
+        using var p = new System.Drawing.Imaging.EncoderParameters(1);
+        p.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 70L);
         using var ms = new MemoryStream();
-        bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+        bmp.Save(ms, enc, p);
         return ms.ToArray();
     }
 }

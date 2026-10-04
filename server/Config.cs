@@ -110,7 +110,7 @@ public class Shortcut
 {
     public string Name { get; set; } = "";
     public string Url { get; set; } = "";
-    public string Color { get; set; } = "#c97d3a";
+    public string Color { get; set; } = "#ffc94d";
 }
 
 public class ConfigStore

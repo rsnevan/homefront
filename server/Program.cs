@@ -197,7 +197,7 @@ app.MapGet("/api/qr.svg", (string data) =>
 {
     using var gen = new QRCodeGenerator();
     using var qr = gen.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
-    return Results.Text(new SvgQRCode(qr).GetGraphic(8, "#0f0f0f", "#f5f4f0", drawQuietZones: true), "image/svg+xml");
+    return Results.Text(new SvgQRCode(qr).GetGraphic(8, "#0f1726", "#f3f6fa", drawQuietZones: true), "image/svg+xml");
 });
 
 // ---------------- Home Assistant ----------------

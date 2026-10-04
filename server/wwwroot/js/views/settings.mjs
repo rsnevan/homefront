@@ -106,7 +106,7 @@ export function Settings() {
 
       <section class="panel set-sec">
         <div class="row between"><h2 class="h-sec">Open on the TV</h2>
-          <button class="btn sm" onClick=${() => upd({ shortcuts: [...cfg.shortcuts, { name: '', url: 'https://', color: '#c97d3a' }] })}><${Icon} name="plus" size=${16} />Add</button></div>
+          <button class="btn sm" onClick=${() => upd({ shortcuts: [...cfg.shortcuts, { name: '', url: 'https://', color: '#ffc94d' }] })}><${Icon} name="plus" size=${16} />Add</button></div>
         <div class="list-edit">
           ${cfg.shortcuts.map((sc, i) => html`<div class="row">
             <input type="color" aria-label="Colour" value=${sc.color} onInput=${e => upd({ shortcuts: cfg.shortcuts.map((x, j) => j === i ? { ...x, color: e.target.value } : x) })} style="width:42px;height:42px;border:0;background:none;padding:0;flex:none" />
@@ -170,7 +170,7 @@ function Guests() {
         <option value="4">4 hours</option><option value="24">1 day</option><option value="48">2 days</option><option value="168">1 week</option><option value="0">No expiry</option></select>
       <button class="btn primary" type="submit"><${Icon} name="ticket" size=${18} />Create pass</button>
     </form>
-    ${made && html`<div class="row wrap" style="gap:20px;align-items:center;border:1px solid var(--amber);border-radius:var(--r-md);padding:16px;background:var(--amber-soft)">
+    ${made && html`<div class="row wrap" style="gap:20px;align-items:center;border:1px solid var(--accent);border-radius:var(--r-md);padding:16px;background:var(--accent-soft)">
       <img class="qr" style="width:160px;height:160px" src=${'/api/qr.svg?data=' + encodeURIComponent(made.url)} alt="Guest pass QR code" />
       <div class="grow stack" style="min-width:220px">
         <b style="font-weight:500">${made.pass.name}'s pass is ready</b>

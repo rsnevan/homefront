@@ -17,7 +17,7 @@
 
 homefront runs on the HTPC that's plugged into the TV and becomes the one place to control everything around it. Open it on a phone, a laptop, a tablet or the TV itself.
 
-- **The house as a live floor plan.** Each room glows with the real colour temperature and brightness of its bulbs. Tap a room for per-bulb brightness, warmth and colour. An amber dot on the wall marks the room where something is playing.
+- **The house as a live floor plan.** Each room glows with the real colour temperature and brightness of its bulbs. Tap a room for per-bulb brightness, warmth and colour. A lamplight-yellow dot on the wall marks the room where something is playing.
 - **Lights that follow what's playing.** When a video plays on the HTPC (the built-in player, a browser tab, or VLC), the TV room dims. Pause brings the lights up a little; stopping puts every bulb back exactly as it was. Lights that were off stay off, so nothing switches on in the daytime.
 - **A remote that shows the screen.** A live mirror of the TV. Tap anything on it to click it there, or switch to a touchpad with two-finger scrolling. Type into search boxes from your phone, send keys, control media and system volume.
 - **Your Jellyfin library, played on the TV.** Browse, search and press *Play on TV*. A full-screen kiosk player opens on the HTPC and is controlled from your phone, resumes where you left off, reports progress back to Jellyfin and moves to the next episode on its own.

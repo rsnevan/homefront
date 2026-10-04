@@ -30,8 +30,8 @@ export function Ambient() {
           ${s.rooms?.length > 0 && html`<div class="amb-plan"><${Plan} mini /></div>`}
         </div>
         <div class="amb-foot">
-          ${np ? html`${np.art && html`<img src=${np.art} alt="" />`}<div><div style="color:#f5f4f0">${np.title}</div><div>${np.sub || np.app}</div></div>`
-               : html`<span style="display:flex;align-items:center;gap:1vw"><svg width="22" height="22" viewBox="0 0 48 48" fill="none"><path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="38" r="3" fill="#c97d3a"/></svg>${s.home?.name || 'homefront'}</span>`}
+          ${np ? html`${np.art && html`<img src=${np.art} alt="" />`}<div><div style="color:#e6ecf4">${np.title}</div><div>${np.sub || np.app}</div></div>`
+               : html`<span style="display:flex;align-items:center;gap:1vw"><svg width="22" height="22" viewBox="0 0 48 48" fill="none"><path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="38" r="3" fill="#ffc94d"/></svg>${s.home?.name || 'homefront'}</span>`}
         </div>
       </div>
     </div>`;
@@ -153,6 +153,6 @@ export function Player() {
           <div class="progress"><i style=${`width:${total ? (pos / total) * 100 : 0}%`}></i></div>
           <div class="times"><span>${dur(pos)}</span><span>${status === 'paused' ? 'Paused' : ''}</span><span>-${dur(total - pos)}</span></div>
         </div>`}
-      ${upNext && html`<div class="upnext"><span style="color:rgba(245,244,240,.65)">Next episode in ${Math.max(0, Math.ceil((upNext.at - now.getTime()) / 1000))}s</span><b>Up next</b></div>`}
+      ${upNext && html`<div class="upnext"><span style="color:rgba(230, 236, 244, .65)">Next episode in ${Math.max(0, Math.ceil((upNext.at - now.getTime()) / 1000))}s</span><b>Up next</b></div>`}
     </div>`;
 }

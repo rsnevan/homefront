@@ -12,8 +12,8 @@ export function Icon({ name, size, cls = '' }) {
 
 export const Mark = ({ size = 30, dark = false }) => html`
   <svg width=${size} height=${size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-    <path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38" stroke=${dark ? '#0f0f0f' : 'currentColor'} stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="26" cy="38" r="3" fill="#c97d3a"/>
+    <path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38" stroke=${dark ? '#0f1726' : 'currentColor'} stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26" cy="38" r="3" fill="#ffc94d"/>
   </svg>`;
 
 // ---------------- store ----------------
@@ -250,11 +250,22 @@ export function glow(lights) {
     const a = e.attributes || {};
     let c;
     if (a.color_mode && !['color_temp', 'brightness', 'onoff', 'white'].includes(a.color_mode) && a.rgb_color) c = a.rgb_color;
-    else c = kelvinRgb(a.color_temp_kelvin || 2700);
+    else {
+      // White light, pulled toward lamplight yellow: thin warm-white over navy otherwise reads as mud.
+      const k = kelvinRgb(a.color_temp_kelvin || 2700), lamp = [255, 201, 77], t = (a.color_temp_kelvin || 2700) < 4500 ? 0.5 : 0.2;
+      c = k.map((v, i) => v + (lamp[i] - v) * t);
+    }
     r += c[0]; g += c[1]; b += c[2]; bri += (a.brightness ?? 255) / 255;
   }
   const n = on.length, level = (bri / n) * (on.length / lights.length);
-  return { color: `rgba(${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)}, ${(0.07 + level * 0.3).toFixed(3)})`, level };
+  const rgb = `${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)}`;
+  // A pool of light spreading from the bulb's corner: stronger and wider as brightness rises.
+  const a = 0.22 + level * 0.5, size = 70 + level * 70;
+  return {
+    level,
+    image: `radial-gradient(${size}% ${size}% at 88% 90%, rgba(${rgb}, ${a.toFixed(3)}) 0%, rgba(${rgb}, ${(a * 0.4).toFixed(3)}) 40%, rgba(${rgb}, 0) 100%)`,
+    color: `rgba(${rgb}, ${(0.03 + level * 0.05).toFixed(3)})`,
+  };
 }
 
 export function kelvinRgb(k) {

@@ -1,9 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 48 48" fill="none">
-  <!-- Background -->
-  <rect width="48" height="48" rx="12" fill="#0f0f0f"/>
-  <!-- Floor plan lines -->
-  <path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38"
-        stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Amber dot — active room indicator -->
-  <circle cx="26" cy="38" r="2.5" fill="#c97d3a"/>
+  <rect width="48" height="48" rx="12" fill="#0F1726"/>
+  <path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38" stroke="#E6ECF4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="26" cy="38" r="2.5" fill="#FFC94D"/>
 </svg>

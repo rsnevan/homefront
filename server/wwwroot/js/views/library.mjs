@@ -42,12 +42,12 @@ export function Library() {
         ${heroImg && html`<img class="bg" src=${heroImg} alt="" />`}
         <div class="veil"></div>
         <div class="copy">
-          <div style="color:rgba(245,244,240,.7);font-size:14px;margin-bottom:10px">${hero.position > 30 ? 'Pick up where you left off' : home.resume?.length ? '' : 'New in your library'}</div>
+          <div style="color:rgba(230, 236, 244, .7);font-size:14px;margin-bottom:10px">${hero.position > 30 ? 'Pick up where you left off' : home.resume?.length ? '' : 'New in your library'}</div>
           <h2>${hero.type === 'Episode' ? hero.seriesName : hero.name}</h2>
           <p>${hero.type === 'Episode' ? `${epLabel(hero)}, ${hero.name}. ` : ''}${hero.overview || ''}</p>
           <div class="row wrap">
             <button class="btn primary" onClick=${() => act('/api/jf/play', { id: hero.id }, 'Starting on the TV')}><${Icon} name="play" />${hero.position > 30 ? `Resume from ${dur(hero.position)}` : 'Play on TV'}</button>
-            <button class="btn" style="background:rgba(245,244,240,.12);color:#f5f4f0;border-color:rgba(245,244,240,.2)" onClick=${() => openItem(hero.type === 'Episode' ? { id: hero.seriesId } : hero)}>Details</button>
+            <button class="btn" style="background:rgba(230, 236, 244, .12);color:#e6ecf4;border-color:rgba(230, 236, 244, .2)" onClick=${() => openItem(hero.type === 'Episode' ? { id: hero.seriesId } : hero)}>Details</button>
           </div>
         </div>
       </section>`}

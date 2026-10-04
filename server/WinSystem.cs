@@ -208,11 +208,11 @@ public static class WinScreen
         var r = Math.Max(10, b.Width / 160);
         var x = p.X - b.Left; var y = p.Y - b.Top;
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        using var outline = new Pen(Color.FromArgb(230, 15, 15, 15), r / 2.2f);
-        using var ring = new Pen(Color.FromArgb(255, 0xC9, 0x7D, 0x3A), r / 3.5f);
+        using var outline = new Pen(Color.FromArgb(230, 11, 18, 32), r / 2.2f);
+        using var ring = new Pen(Color.FromArgb(255, 0xFF, 0xC9, 0x4D), r / 3.5f);
         g.DrawEllipse(outline, x - r, y - r, r * 2, r * 2);
         g.DrawEllipse(ring, x - r, y - r, r * 2, r * 2);
-        using var dot = new SolidBrush(Color.FromArgb(255, 0xC9, 0x7D, 0x3A));
+        using var dot = new SolidBrush(Color.FromArgb(255, 0xFF, 0xC9, 0x4D));
         g.FillEllipse(dot, x - r / 4f, y - r / 4f, r / 2f, r / 2f);
     }
 }

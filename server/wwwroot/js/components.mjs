@@ -111,7 +111,7 @@ export function Plan({ compact, mini, onRoom }) {
           const avg = onCount ? Math.round(ents.filter(isOn).reduce((a, e) => a + pct(e), 0) / onCount) : 0;
           const area = tpl?.[i];
           const style = (area ? `grid-column:${area[0]}/${area[1]};grid-row:${area[2]}/${area[3]};` : 'grid-column:span 12;grid-row:span 2;') +
-            (g ? `background-color:${g.color};` : '') + `--i:${i}`;
+            (g ? `background-color:${g.color};background-image:${g.image};` : '') + `--i:${i}`;
           const edge = (area && area[1] === cols ? ' edge-r' : '') + (area && area[3] === rowsN ? ' edge-b' : '');
           const meta = !ents.length ? (anyLights ? 'No lights here yet' : 'Not connected') : onCount ? `${onCount} of ${ents.length} on` : `${ents.length} ${ents.length === 1 ? 'light' : 'lights'} off`;
           return html`

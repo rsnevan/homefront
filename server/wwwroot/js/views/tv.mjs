@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { html, useStore, useNow, hhmm, dateLong, wx, prayerInfo, until, dur, epLabel, pad } from '../lib.mjs';
+import { html, useStore, useNow, hhmm, dateLong, wx, prayerInfo, until, dur, epLabel, pad, thumbFor } from '../lib.mjs';
 import { Plan, nowPlaying } from '../components.mjs';
 
 // ================= ambient (TV wallpaper) =================
@@ -8,11 +8,35 @@ export function Ambient() {
   const s = useStore();
   const now = useNow(1000);
   const [shift, setShift] = useState([0, 0]);
+  const [shelf, setShelf] = useState([]);
+  const [shelfName, setShelfName] = useState('Continue watching');
+  const [sel, setSel] = useState(0);
+  const selRef = useRef(0), shelfRef = useRef([]);
+  selRef.current = sel; shelfRef.current = shelf;
   useEffect(() => {
     const t = setInterval(() => setShift([Math.round((Math.random() - 0.5) * 40), Math.round((Math.random() - 0.5) * 30)]), 60000);
-    const close = () => fetch('/api/kiosk/close', { method: 'POST' });
-    addEventListener('keydown', close);
-    return () => { clearInterval(t); removeEventListener('keydown', close); };
+    // Continue watching: in-progress titles first, then the next episode of shows you're following.
+    const load = () => fetch('/api/jf/home').then(r => r.ok ? r.json() : {}).then(h => {
+      const seen = new Set();
+      const cont = [...(h.resume || []), ...(h.nextUp || [])].filter(i => !seen.has(i.seriesId || i.id) && seen.add(i.seriesId || i.id));
+      // Nothing in progress yet: show what's new instead of an empty row.
+      const items = cont.length ? cont : [...(h.movies || []), ...(h.shows || [])];
+      setShelfName(cont.length ? 'Continue watching' : 'New in your library');
+      setShelf(items.slice(0, 5));
+    }).catch(() => {});
+    load();
+    const l = setInterval(load, 600000);
+    const play = item => fetch('/api/jf/play', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: item.id }) });
+    const key = e => {
+      const n = shelfRef.current.length;
+      if (e.key === 'ArrowRight' && n) setSel((selRef.current + 1) % n);
+      else if (e.key === 'ArrowLeft' && n) setSel((selRef.current - 1 + n) % n);
+      else if (e.key === 'Enter' && n) play(shelfRef.current[selRef.current]);
+      else if (e.key === 'Escape' || e.key === 'Backspace') fetch('/api/kiosk/close', { method: 'POST' });
+    };
+    addEventListener('keydown', key);
+    window.__ambientPlay = play;
+    return () => { clearInterval(t); clearInterval(l); removeEventListener('keydown', key); };
   }, []);
   const w = s.weather?.now;
   const pi = prayerInfo(s.prayer, now);
@@ -39,6 +63,19 @@ export function Ambient() {
           ${pi?.ramadan && !iftarSoon && html`<div><div class="big num">${hhmm(pi.iftar)}</div><div style="color:var(--muted);margin-top:.6vh">Iftar today</div></div>`}
           ${s.rooms?.length > 0 && html`<div class="amb-plan"><${Plan} mini /></div>`}
         </div>
+        ${shelf.length > 0 && html`
+          <div class="amb-shelf" aria-label=${shelfName}>
+            <span class="amb-shelf-name">${shelfName}</span>
+            ${shelf.map((it, i) => {
+              const img = thumbFor(it, 480);
+              const prog = it.position && it.runtime ? it.position / it.runtime : 0;
+              return html`<button key=${it.id} class=${'amb-card' + (i === sel ? ' on' : '')} onClick=${() => window.__ambientPlay?.(it)} onMouseEnter=${() => setSel(i)}>
+                <div class="amb-img">${img && html`<img src=${img} alt="" />`}${prog > 0.01 && html`<i style=${`width:${prog * 100}%`}></i>`}</div>
+                <span class="amb-title">${it.type === 'Episode' ? it.seriesName : it.name}</span>
+                <span class="amb-sub">${it.type === 'Episode' ? epLabel(it) : it.year || ''}</span>
+              </button>`;
+            })}
+          </div>`}
         <div class="amb-foot">
           ${np ? html`${np.art && html`<img src=${np.art} alt="" />`}<div><div style="color:var(--chalk)">${np.title}</div><div>${np.sub || np.app}</div></div>`
                : html`<span style="display:flex;align-items:center;gap:1vw"><svg width="22" height="22" viewBox="0 0 48 48" fill="none"><path d="M10 38V10H38V38H26M10 38H38M10 22H24M24 10V28M24 28H38" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="38" r="3" fill="#ffc94d"/></svg>${s.home?.name || 'homefront'}</span>`}

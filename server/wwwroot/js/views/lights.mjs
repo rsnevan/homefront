@@ -42,8 +42,38 @@ export function LightsView() {
         </div>
       </section>
       <section class="span-12"><${SceneStrip} /></section>
+      ${owner && s.entities['input_boolean.wake_up_light'] && html`<section class="panel span-6"><${WakePanel} /></section>`}
     </div>
     ${liveRoom && html`<${RoomSheet} room=${liveRoom} onClose=${() => setRoom(null)} />`}`;
+}
+
+// Wake-up light: settings live in Home Assistant helpers so the automation keeps running even if homefront is down.
+const DAYS = [['mon', 'Mon'], ['tue', 'Tue'], ['wed', 'Wed'], ['thu', 'Thu'], ['fri', 'Fri'], ['sat', 'Sat'], ['sun', 'Sun']];
+function WakePanel() {
+  const s = useStore();
+  const on = s.entities['input_boolean.wake_up_light']?.state === 'on';
+  const time = (s.entities['input_datetime.wake_up_time']?.state || '06:30:00').slice(0, 5);
+  const days = (s.entities['input_text.wake_up_days']?.state || '').split(',').filter(Boolean);
+  const fade = Math.round(+(s.entities['input_number.wake_up_fade_minutes']?.state || 15));
+  const call = (domain, service, data, entity) => api('/api/ha/call', { domain, service, data, target: { entity_id: entity } }).catch(e => toast(e.message, true));
+  const setDays = d => call('input_text', 'set_value', { value: DAYS.map(x => x[0]).filter(x => d.includes(x)).join(',') }, 'input_text.wake_up_days');
+  const start = (() => { const [h, m] = time.split(':').map(Number); const t = h * 60 + m - fade; const w = (t + 1440) % 1440; return `${String(Math.floor(w / 60)).padStart(2, '0')}:${String(w % 60).padStart(2, '0')}`; })();
+  return html`
+    <div class="row between">
+      <div class="grow"><b style="font-weight:500">Wake-up light</b>
+        <div class="muted small">${on ? `The bedroom starts glowing at ${start} and is fully bright by ${time}.` : 'The bedroom fades from a dim warm glow to bright daylight before you get up.'}</div></div>
+      <${Toggle} label="Wake-up light" checked=${on} onChange=${v => call('input_boolean', v ? 'turn_on' : 'turn_off', {}, 'input_boolean.wake_up_light').then(() => toast(v ? `Wake-up light on for ${time}` : 'Wake-up light off'))} />
+    </div>
+    <div class="form-grid" style="margin-top:14px">
+      <div class="field"><label for="wt">Fully bright at</label>
+        <input id="wt" class="input num" type="time" value=${time} onChange=${e => e.target.value && call('input_datetime', 'set_datetime', { time: e.target.value + ':00' }, 'input_datetime.wake_up_time')} /></div>
+      <div class="field"><label for="wf">Fade over</label>
+        <select id="wf" class="input" value=${fade} onChange=${e => call('input_number', 'set_value', { value: +e.target.value }, 'input_number.wake_up_fade_minutes')}>
+          ${[5, 10, 15, 20, 30, 45].map(m => html`<option value=${m}>${m} minutes</option>`)}</select></div>
+    </div>
+    <div class="row wrap" style="gap:8px;margin-top:14px" role="group" aria-label="Days">
+      ${DAYS.map(([k, n]) => html`<button class="chip" aria-pressed=${days.includes(k)} onClick=${() => setDays(days.includes(k) ? days.filter(x => x !== k) : [...days, k])}>${n}</button>`)}
+    </div>`;
 }
 
 function TuyaSetup({ onDone }) {

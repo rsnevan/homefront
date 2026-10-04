@@ -213,7 +213,7 @@ app.MapGet("/api/qr.svg", (string data) =>
 
 app.MapPost("/api/ha/call", async (HaCall c) =>
 {
-    var allowed = new[] { "light", "media_player", "switch", "fan", "scene", "script", "input_boolean", "cover", "climate" };
+    var allowed = new[] { "light", "media_player", "switch", "fan", "scene", "script", "input_boolean", "input_datetime", "input_text", "input_number", "cover", "climate" };
     if (!allowed.Contains(c.Domain)) return Results.BadRequest(new { error = "domain not allowed" });
     await ha.CallService(c.Domain, c.Service, c.Data == null ? null : JsonNode.Parse(c.Data.Value.GetRawText()), c.Target == null ? null : JsonNode.Parse(c.Target.Value.GetRawText()));
     return Results.Ok();

@@ -9,7 +9,7 @@ namespace Homefront;
 
 public class HomeAssistant
 {
-    static readonly HashSet<string> Domains = ["light", "media_player", "switch", "fan", "climate", "cover", "camera", "scene", "script", "input_boolean", "sun", "weather", "binary_sensor"];
+    static readonly HashSet<string> Domains = ["light", "media_player", "switch", "fan", "climate", "cover", "camera", "scene", "script", "input_boolean", "sun", "weather", "binary_sensor", "input_datetime", "input_text", "input_number", "schedule"];
 
     readonly ConfigStore _cfg;
     readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };

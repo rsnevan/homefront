@@ -549,7 +549,7 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 /* ---------- ambient (TV wallpaper) ---------- */
 
 .ambient { position: fixed; inset: 0; background: #0b1220; color: #e6ecf4; overflow: hidden; cursor: none; --muted: rgba(230, 236, 244, 0.55); --wall: rgba(230, 236, 244, 0.5); --bg: #0b1220; --line-2: rgba(230, 236, 244, 0.16); --hover: transparent; }
-.amb-inner { position: absolute; inset: 7vh 6vw; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 1fr auto; gap: 4vh 4vw; transition: transform 4s var(--ease); }
+.amb-inner { position: absolute; inset: 7vh 6vw; display: grid; grid-template-columns: 1fr auto; grid-template-rows: 1fr auto auto; gap: 4vh 4vw; transition: transform 4s var(--ease); }
 .amb-time { font: 400 min(22vw, 34vh)/0.82 var(--display); letter-spacing: -0.06em; font-variant-numeric: tabular-nums; align-self: end; }
 .amb-date { font: 400 min(2.6vw, 4vh)/1.2 var(--font); color: var(--muted); margin-top: 3vh; letter-spacing: -0.02em; }
 .amb-side { align-self: end; display: grid; gap: 3vh; justify-items: end; text-align: right; font-size: min(1.6vw, 2.6vh); }
@@ -604,3 +604,15 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 
 /* very narrow phones: five player buttons must fit in 256px */
 @media (max-width: 380px) { .np-controls { gap: 4px; } .np-controls .icon-btn.big { width: 56px; height: 56px; } }
+
+/* ambient: continue watching, picked with the arrow keys */
+.amb-shelf { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 1.6vw; }
+.amb-shelf-name { flex-basis: 100%; font-size: min(1.15vw, 1.9vh); color: var(--muted); margin-bottom: -0.6vh; }
+.amb-card { width: min(15vw, 26vh); display: grid; gap: 0.8vh; text-align: left; color: var(--chalk); cursor: pointer; }
+.amb-img { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: rgba(230, 236, 244, 0.06); outline: 3px solid transparent; outline-offset: 3px; transition: outline-color 200ms var(--ease); }
+.amb-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: opacity 200ms var(--ease); }
+.amb-img i { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); }
+.amb-card.on .amb-img { outline-color: var(--accent); }
+.amb-card.on .amb-img img { opacity: 1; }
+.amb-title { font-size: min(1.25vw, 2.1vh); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.amb-sub { font-size: min(1.05vw, 1.8vh); color: var(--muted); }

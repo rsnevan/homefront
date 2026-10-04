@@ -100,6 +100,10 @@ string? TvEntity()
     return ha.Entities.Keys.FirstOrDefault(k => k.StartsWith("media_player.lg_webos")) ?? ha.Entities.Keys.FirstOrDefault(k => k.StartsWith("media_player.") && k.Contains("tv"));
 }
 
+apps.TvIsOn = () => ha.Connected && TvEntity() is { } tvId && ha.Entities.TryGetValue(tvId, out var tvState)
+    ? tvState.GetProperty("state").GetString() is "on" or "playing" or "paused" or "idle"
+    : null;
+
 ha.EntityChanged += (id, s) =>
 {
     hub.Broadcast("entity", new { id, state = s });
@@ -237,7 +241,7 @@ app.MapPost("/api/tv/{action}", async (string action, TvReq? r) =>
     JsonObject Target() => new() { ["entity_id"] = tv };
     switch (action)
     {
-        case "on": await apps.Tv("-poweron"); break;
+        case "on": await apps.TvOn(); break;
         case "off": await apps.Tv("-poweroff"); break;
         case "screen_off": await apps.Tv("-screenoff"); break;
         case "screen_on": await apps.Tv("-screenon"); break;
@@ -439,10 +443,12 @@ ha.CommandReceived += async d =>
             case "welcome":
                 if (apps.KioskPage == null && !(media.State.Active && media.State.Status == "playing"))
                 {
-                    try { await apps.Tv("-poweron"); await apps.Tv($"-sethdmi {cfg.Value.Pc.TvPcInput}"); } catch (Exception e) { Log.Warn($"welcome tv: {e.Message}"); }
+                    try { await apps.TvOn(); await apps.Tv($"-sethdmi {cfg.Value.Pc.TvPcInput}"); } catch (Exception e) { Log.Warn($"welcome tv: {e.Message}"); }
                     await apps.OpenKiosk("ambient", "/ambient");
                 }
                 break;
+            // Home Assistant asked to switch the TV on (its webOS integration can't wake the TV by itself).
+            case "tv_on": await apps.TvOn(); break;
             case "close_kiosk": await apps.CloseKiosk(); break;
             case "open": await apps.OpenUrl(S("url")); break;
             case "pause": await media.Control("pause"); hub.ToPlayers("cmd", new { cmd = "pause" }); break;

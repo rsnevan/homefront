@@ -122,6 +122,71 @@ public class Apps
 
     // ---- LG TV via LGTV Companion's CLI (reuses its pairing) ----
 
+    /// Set by Program: whether Home Assistant currently sees the TV as on (null when it can't tell).
+    public Func<bool?>? TvIsOn { get; set; }
+
+    /// A TV in deep standby often sleeps through the first wake-up, so keep knocking (LGTV Companion's wake
+    /// plus our own magic packets) until the TV reports it's on, for up to 25 seconds.
+    public async Task<bool> TvOn()
+    {
+        if (TvIsOn?.Invoke() == true) return true;
+        var mac = TvMac();
+        var until = DateTime.UtcNow.AddSeconds(25);
+        var attempt = 0;
+        while (DateTime.UtcNow < until)
+        {
+            if (mac != null) await MagicPacket(mac);
+            if (attempt++ % 2 == 0) { try { await Tv("-poweron"); } catch (Exception e) { Log.Warn($"tv on: {e.Message}"); } }
+            for (var i = 0; i < 6; i++)
+            {
+                await Task.Delay(500);
+                if (TvIsOn?.Invoke() == true) { if (attempt > 1) Log.Info($"TV woke after {attempt} tries"); return true; }
+            }
+            if (TvIsOn?.Invoke() == null && attempt >= 2) return true;   // can't check; two rounds is the best we can do
+        }
+        Log.Warn("TV didn't wake up within 25 s");
+        return false;
+    }
+
+    // The TV's MAC, from LGTV Companion's pairing.
+    static byte[]? TvMac()
+    {
+        try
+        {
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LGTV Companion", "config.json");
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            foreach (var dev in doc.RootElement.EnumerateObject())
+                if (dev.Value.ValueKind == System.Text.Json.JsonValueKind.Object && dev.Value.TryGetProperty("MAC", out var macs) && macs.GetArrayLength() > 0)
+                    return Convert.FromHexString(macs[0].GetString()!.Replace(":", "").Replace("-", ""));
+        }
+        catch { }
+        return null;
+    }
+
+    static async Task MagicPacket(byte[] mac)
+    {
+        var packet = new byte[102];
+        for (var i = 0; i < 6; i++) packet[i] = 0xFF;
+        for (var i = 1; i <= 16; i++) Buffer.BlockCopy(mac, 0, packet, i * 6, 6);
+        using var udp = new System.Net.Sockets.UdpClient { EnableBroadcast = true };
+        // Every IPv4 network the HTPC is on, plus the global broadcast, on both usual ports.
+        var targets = new List<System.Net.IPAddress> { System.Net.IPAddress.Broadcast };
+        foreach (var nic in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (nic.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up) continue;
+            foreach (var u in nic.GetIPProperties().UnicastAddresses)
+            {
+                if (u.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork || u.IPv4Mask == null || System.Net.IPAddress.IsLoopback(u.Address)) continue;
+                var ip = u.Address.GetAddressBytes(); var mask = u.IPv4Mask.GetAddressBytes();
+                if (ip[0] == 100 && ip[1] >= 64 && ip[1] < 128) continue;   // Tailscale
+                targets.Add(new System.Net.IPAddress(ip.Select((b, i) => (byte)(b | ~mask[i])).ToArray()));
+            }
+        }
+        foreach (var t in targets.Distinct())
+            foreach (var port in new[] { 9, 7 })
+                try { await udp.SendAsync(packet, packet.Length, new System.Net.IPEndPoint(t, port)); } catch { }
+    }
+
     public async Task<string> Tv(string args)
     {
         var psi = new ProcessStartInfo(_cfg.Value.Pc.LgtvCli, args) { UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true };

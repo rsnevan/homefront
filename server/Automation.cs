@@ -135,7 +135,7 @@ public class Scenes
 
     async Task TvOnToPc()
     {
-        await _apps.Tv("-poweron");
+        await _apps.TvOn();
         await _apps.Tv($"-sethdmi {_cfg.Value.Pc.TvPcInput}");
     }
 }

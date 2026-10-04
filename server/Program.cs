@@ -108,6 +108,7 @@ ha.EntityChanged += (id, s) =>
 {
     hub.Broadcast("entity", new { id, state = s });
     if (id.StartsWith("light.") && s == null) hub.Broadcast("rooms", RoomsView());
+    if (id.StartsWith("light.")) cinema.LightChanged(id, s);
 };
 ha.ConnectionChanged += c => { hub.Broadcast("ha", new { connected = c, version = ha.Version, url = ha.BaseUrl }); if (c) { hub.Broadcast("entities", ha.Entities.ToDictionary(e => e.Key, e => e.Value)); hub.Broadcast("rooms", RoomsView()); hub.Broadcast("tvEntity", TvEntity() ?? ""); } };
 media.Changed += m => hub.Broadcast("media", m);

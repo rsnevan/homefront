@@ -155,6 +155,7 @@ public class Cinema
     string _applied = "idle";
     string _pending = "idle";
     CancellationTokenSource? _debounce;
+    DateTime _ownUntil = DateTime.MinValue;   // light changes before this are echoes of our own dimming
     public string Mode => _applied;
     public event Action<string>? ModeChanged;
     public Func<string>? PlayerStatus;   // homefront kiosk player: "playing" | "paused" | "stopped"
@@ -189,6 +190,7 @@ public class Cinema
         try
         {
             var ids = _lights.InRooms(c.Rooms);
+            _ownUntil = DateTime.UtcNow.AddSeconds(10);
             if (want == "idle")
             {
                 if (_saved != null) await _lights.Restore(_saved);
@@ -218,4 +220,15 @@ public class Cinema
     }
 
     void SetMode(string m) { _applied = m; ModeChanged?.Invoke(m); }
+
+    /// Someone changed a cinema-room light while something is playing (a scene like Late night, the app,
+    /// the wall switch): that becomes the state to come back to, and the level dimming never goes above.
+    public void LightChanged(string id, JsonElement? state)
+    {
+        if (_saved == null || state == null || DateTime.UtcNow < _ownUntil) return;
+        if (!_lights.InRooms(_cfg.Value.Cinema.Rooms).Contains(id)) return;
+        var snap = _lights.Capture(id);
+        var i = _saved.FindIndex(x => x.Id == id);
+        if (i >= 0) _saved[i] = snap; else _saved.Add(snap);
+    }
 }

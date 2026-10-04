@@ -101,6 +101,7 @@ public class Scenes
         new("movie", "Movie", "popcorn", "TV on, PC input, cinema rooms dimmed warm"),
         new("evening", "Evening", "sun-dim", "Every light at a soft 50%"),
         new("bright", "Bright", "sun", "Full, neutral white"),
+        new("latenight", "Late night", "lamp", "Living room and kitchen at 1%, warmest"),
         new("off", "Lights off", "lightbulb-off", "Every light off"),
         new("goodnight", "Goodnight", "moon-star", "Pause, TV off, lights off"),
     ];
@@ -122,6 +123,12 @@ public class Scenes
                 break;
             case "evening": await _lights.Set(all, true, 50, 2700, 2); break;
             case "bright": await _lights.Set(all, true, 100, 4000, 1); break;
+            case "latenight":
+                var night = _lights.InRooms(["Living Room", "Kitchen"]);
+                await Task.WhenAll(
+                    _lights.Set(night, true, 1, 2000, 2),
+                    _lights.Set(all.Except(night), false, transition: 2));
+                break;
             case "off": await _lights.Set(all, false, transition: 2); break;
             case "goodnight":
                 await _media.Control("pause");

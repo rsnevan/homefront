@@ -202,8 +202,15 @@ public class Cinema
                     if (on.Count == 0) { SetMode("idle"); return; }   // daytime / lights already off: leave them alone
                     _saved = on.Select(_lights.Capture).ToList();
                 }
-                var target = _saved.Select(s => s.Id).ToList();
-                await _lights.Set(target, true, want == "playing" ? c.PlayingBrightness : c.PausedBrightness, 2200, want == "playing" ? 3 : 1.5);
+                // Only ever dim: a light already below the cinema level (Late night at 1%) keeps its level,
+                // and one already warmer than 2200 K keeps its warmth.
+                var level = want == "playing" ? c.PlayingBrightness : c.PausedBrightness;
+                foreach (var g in _saved.GroupBy(s =>
+                {
+                    var pct = s.Brightness is { } b ? Math.Max(1, (int)Math.Round(b / 2.55)) : 100;
+                    return (pct: Math.Min(pct, level), k: Math.Min(s.Kelvin ?? 2200, 2200));
+                }))
+                    await _lights.Set(g.Select(s => s.Id), true, g.Key.pct, g.Key.k, want == "playing" ? 3 : 1.5);
             }
             SetMode(want);
         }

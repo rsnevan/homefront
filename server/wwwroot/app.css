@@ -616,3 +616,51 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 .amb-card.on .amb-img img { opacity: 1; }
 .amb-title { font-size: min(1.25vw, 2.1vh); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .amb-sub { font-size: min(1.05vw, 1.8vh); color: var(--muted); }
+
+/* remote: view switcher */
+.seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); margin-bottom: 14px; max-width: 100%; }
+.seg button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px; border-radius: 999px; color: var(--muted); font-weight: 500; font-size: 14px; white-space: nowrap; }
+.seg button.on { background: var(--raised-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+.seg button.on svg.i { color: var(--accent); }
+
+/* remote: touchpad */
+.pad-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 760px; }
+.touchpad { position: relative; height: clamp(260px, 52dvh, 560px); border-radius: var(--r-md); border: 1px solid var(--line); overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, var(--raised-2), var(--raised) 70%); touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.touchpad .ripple { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; border: 2px solid var(--accent); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .touchpad .ripple { animation: ripple 500ms var(--ease) forwards; } }
+.pad-hint { position: absolute; left: 16px; right: 64px; bottom: 14px; pointer-events: none; line-height: 1.4; }
+.scroll-strip { position: absolute; top: 0; right: 0; bottom: 0; width: 48px; border-left: 1px dashed var(--line-2); display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 12px 0; color: var(--faint, var(--muted)); touch-action: none; }
+.pad-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pad-buttons .key { height: 56px; }
+
+/* remote: live keyboard */
+.kbd { display: grid; gap: 10px; position: relative; }
+.kbd > .btn { justify-self: stretch; justify-content: center; }
+.kbd-input { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; font-size: 16px; border: 0; padding: 0; pointer-events: none; }
+.kbd-extra { display: flex; flex-wrap: wrap; gap: 6px; }
+.kbd-extra .chip { min-width: 44px; justify-content: center; }
+
+/* remote: media and volume strip */
+.media-strip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--raised); margin-top: 12px; }
+.pad-wrap .media-strip, .buttons-view .media-strip { margin-top: 0; }
+.media-strip-gap { flex: 1; }
+.vol-num { min-width: 2.2ch; text-align: center; }
+@media (max-width: 480px) {
+  .media-strip { gap: 4px; padding: 8px 10px; }
+  .media-strip .icon-btn { width: 42px; height: 42px; }
+  .media-strip .icon-btn.big { width: 52px; height: 52px; }
+  .seg { display: flex; }
+  .seg button { flex: 1; justify-content: center; padding: 0 8px; }
+}
+@media (max-width: 360px) {
+  .media-strip .icon-btn { width: 38px; height: 38px; }
+  .media-strip .icon-btn.big { width: 46px; height: 46px; }
+  .vol-num { display: none; }
+  .seg button svg.i { display: none; }
+}
+
+/* remote: buttons view */
+.buttons-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 520px; }
+.keys .key { gap: 6px; display: inline-flex; align-items: center; justify-content: center; }
+

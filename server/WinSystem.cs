@@ -229,11 +229,20 @@ public static class WinInput
     };
     static readonly HashSet<ushort> Extended = [0x25, 0x26, 0x27, 0x28, 0x2E, 0x24, 0x23, 0x21, 0x22, 0x5B];
 
+    // Named keys, any letter or digit, and F1-F12 (so the phone keyboard can send Ctrl+C, Win+D...).
+    static ushort Code(string k)
+    {
+        if (Vk.TryGetValue(k, out var v)) return v;
+        if (k.Length == 1 && char.IsAsciiLetterOrDigit(k[0])) return char.ToUpperInvariant(k[0]);
+        if (k.Length is 2 or 3 && (k[0] is 'f' or 'F') && int.TryParse(k[1..], out var n) && n is >= 1 and <= 12) return (ushort)(0x6F + n);
+        return 0;
+    }
+
     /// "ctrl+w", "alt+f4", "space", "f11"...
     public static void Combo(string combo)
     {
         var keys = combo.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(k => k.Equals("f4", StringComparison.OrdinalIgnoreCase) ? (ushort)0x73 : Vk.TryGetValue(k, out var v) ? v : (ushort)0)
+            .Select(Code)
             .Where(v => v != 0).ToList();
         if (keys.Count == 0) return;
         var seq = new List<INPUT>();

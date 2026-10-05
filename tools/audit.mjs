@@ -165,7 +165,7 @@ const STATES = [
   ['tracks-sheet', async p => { await stressed('/', '.plan .room')(p); await p.getByRole('button', { name: 'Subtitles and audio' }).first().click(); await p.waitForSelector('.track-list'); }],
   ['timer-sheet', async p => { await stressed('/', '.plan .room')(p); await p.locator('.chip', { hasText: 'Off in' }).first().click(); await p.waitForSelector('.sheet'); }],
   ['sleep-confirm', async p => { await go('/', '.plan .room')(p); await p.getByRole('button', { name: 'Sleep', exact: true }).click(); await p.waitForSelector('.sheet'); }],
-  ['remote', stressed('/remote', '.mirror')],
+  ['remote', stressed('/remote', '.remote-tabs')],
   ['library', go('/library', '.shelf .tile')],
   ['library-movies', async p => { await go('/library', '.lib-tabs')(p); await p.getByRole('button', { name: 'Movies' }).click(); await p.waitForSelector('.grid-posters .tile'); }],
   ['library-search', async p => { await go('/library', '.lib-tabs')(p); await p.fill('.search input', 'the'); await p.waitForTimeout(1500); }],

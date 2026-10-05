@@ -15,9 +15,9 @@ const shows = (await api('/api/jf/browse?type=Series&limit=40')).items.filter(i 
 const feature = movies.find(m => /Help/i.test(m.name)) || movies[0];
 const backdrop = Buffer.from(await (await fetch(`${BASE}/api/jf/img/${feature.id}/Backdrop?w=1280`)).arrayBuffer());
 
-async function page(viewport, dpr = 2) {
+async function page(viewport, dpr = 2, remoteView = 'screen') {
   const ctx = await browser.newContext({ viewport, deviceScaleFactor: dpr, colorScheme: 'dark' });
-  await ctx.addInitScript(() => { try { localStorage.setItem('hf-theme', 'dark'); } catch {} });
+  await ctx.addInitScript(v => { try { localStorage.setItem('hf-theme', 'dark'); localStorage.setItem('hf-remote-view', v); } catch {} }, remoteView);
   // The "HTPC screen" shows a movie still instead of a real desktop.
   await ctx.route('**/api/pc/screen.jpg*', r => r.fulfill({ body: backdrop, contentType: 'image/jpeg' }));
   const p = await ctx.newPage();
@@ -94,6 +94,10 @@ const S = stage(feature, runtime);
   await p.waitForSelector('.mirror');
   await p.evaluate(`(${S.toString().replace(/^async \(\) => /, 'async (feature, runtime) => ')})(${JSON.stringify(feature)}, ${runtime})`);
   await shot(p, 'remote.jpg', { wait: 2500 });
+  await p.goto(BASE + '/lights');
+  await p.waitForSelector('.plan .room');
+  await p.evaluate(`(${S.toString().replace(/^async \(\) => /, 'async (feature, runtime) => ')})(${JSON.stringify(feature)}, ${runtime})`);
+  await shot(p, 'lights.jpg', { wait: 2500, full: true });
   await ctx.close();
 }
 
@@ -104,9 +108,23 @@ const S = stage(feature, runtime);
   await p.waitForSelector('.plan .room');
   await p.evaluate(`(${S.toString().replace(/^async \(\) => /, 'async (feature, runtime) => ')})(${JSON.stringify(feature)}, ${runtime})`);
   await shot(p, 'phone-home.jpg', { wait: 3500 });
+  await p.locator('.vol-stepper').first().screenshot({ path: new URL('tv-volume.png', OUT).pathname.slice(1) }).catch(() => {});
+  await p.goto(BASE + '/lights');
+  await p.waitForSelector('.plan .room');
+  await p.evaluate(`(${S.toString().replace(/^async \(\) => /, 'async (feature, runtime) => ')})(${JSON.stringify(feature)}, ${runtime})`);
+  await shot(p, 'phone-lights.jpg', { wait: 2500 });
+  const wake = p.locator('.panel', { hasText: 'Wake-up light' }).first();
+  if (await wake.count()) { await wake.scrollIntoViewIfNeeded(); await p.waitForTimeout(400); await wake.screenshot({ path: new URL('wake.png', OUT).pathname.slice(1) }); console.log('saved wake.png'); }
+  await ctx.close();
+}
+
+// Phone remote: the touchpad and live keyboard
+{
+  const { ctx, p } = await page({ width: 390, height: 844 }, 3, 'pad');
   await p.goto(BASE + '/remote');
-  await p.waitForSelector('.mirror');
-  await shot(p, 'phone-remote.jpg', { wait: 2500 });
+  await p.waitForSelector('.touchpad');
+  await p.evaluate(`(${S.toString().replace(/^async \(\) => /, 'async (feature, runtime) => ')})(${JSON.stringify(feature)}, ${runtime})`);
+  await shot(p, 'phone-remote.jpg', { wait: 2000 });
   await ctx.close();
 }
 

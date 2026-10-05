@@ -13,41 +13,73 @@
   <img src="docs/screenshots/home.jpg" alt="homefront home screen: a live floor plan of the house with lit rooms, a now-playing card, scenes and TV controls">
 </p>
 
+<p align="center">
+  <a href="docs/README.md"><b>Documentation</b></a> ·
+  <a href="docs/user-guide.md">User guide</a> ·
+  <a href="docs/install.md">Install</a> ·
+  <a href="docs/automations.md">Automations</a> ·
+  <a href="docs/remote-access.md">Remote access</a> ·
+  <a href="docs/troubleshooting.md">Troubleshooting</a>
+</p>
+
 ## What it does
 
-homefront runs on the HTPC that's plugged into the TV and becomes the one place to control everything around it. Open it on a phone, a laptop, a tablet or the TV itself.
+homefront runs on the HTPC that's plugged into the TV and becomes the one place to control everything around it. Open it on a phone, a laptop, a tablet or the TV itself. Home Assistant handles devices and automations underneath, so the house keeps working even when homefront doesn't.
 
-- **The house as a live floor plan.** Each room glows with the real colour temperature and brightness of its bulbs. Tap a room for per-bulb brightness, warmth and colour. A lamplight-yellow dot on the wall marks the room where something is playing.
-- **Lights that follow what's playing.** When a video plays on the HTPC (the built-in player, a browser tab, or VLC), the TV room dims. Pause brings the lights up a little; stopping puts every bulb back exactly as it was. Lights that were off stay off, so nothing switches on in the daytime.
-- **A remote that shows the screen.** A live mirror of the TV. Tap anything on it to click it there, or switch to a touchpad with two-finger scrolling. Type into search boxes from your phone, send keys, control media and system volume.
-- **Your Jellyfin library, played on the TV.** Browse, search and press *Play on TV*. A full-screen kiosk player opens on the HTPC and is controlled from your phone, resumes where you left off, reports progress back to Jellyfin and moves to the next episode on its own. Subtitles come on in your language by default; switch subtitle or audio tracks from the phone (picture-based DVD/PGS subtitles are drawn into the video).
+### The house
+
+- **A live floor plan.** Each room glows with the real colour temperature and brightness of its bulbs. Tap a room for per-bulb brightness, warmth and colour. A lamplight-yellow dot on the wall marks the room where something is playing.
+- **Scenes.** Movie (TV on, HTPC input, cinema rooms dimmed warm), Evening, Bright, Late night (living room and kitchen at 1% and the warmest white, everything else off), Lights off, Goodnight (pause, TV off, lights off).
+- **Lights that follow what's playing.** When a video plays on the HTPC, the TV room dims; pausing lifts it a little; stopping puts every bulb back exactly as it was. It only ever dims, so Late night at 1% stays at 1%, and lights that were off stay off. If you change the lights mid-film, that becomes the state it returns to.
+- **Sunset fade.** From twenty minutes before sunset, if the TV is on and the living room is dark, the lights climb one small step a minute to a warm 60%. If you were already watching, it runs to the end through pauses and new episodes; if a film starts from scratch, it hands over to follow-what's-playing. Touch the lights yourself and it stops.
+- **Wake-up light.** Choose when you want to be up, the days and how long the fade is; the bedroom ramps from a dim warm glow to bright daylight. The settings live in Home Assistant, so it runs even if homefront is down.
+
+<p align="center"><img src="docs/screenshots/wake.png" width="520" alt="Wake-up light settings: time, fade length and days of the week"></p>
+
+### The TV and the HTPC
+
+- **A remote that feels like a remote.** On a phone it opens as a big touchpad: drag to move, tap to click, two fingers or the edge strip to scroll, hold to right-click, tap-then-drag to drag. A live keyboard sends every key as you press it (with Ctrl, Alt, Win, arrows and F11 on hand), and **Paste** types your phone's clipboard into whatever is focused on the TV. A Screen tab mirrors the TV when you can't see it; a Buttons tab is a classic arrows-and-OK remote. Media and volume controls sit under every tab.
+- **TV control** for LG webOS TVs: power, input, screen-off-with-sound, and big − / + volume buttons around a level you can type. Switching on keeps sending wake-up packets until the TV answers, because a TV in deep standby often ignores the first one.
+- **Open anything on the TV.** One tap opens Netflix, YouTube, DStv and friends in the HTPC's everyday browser with your logins, or desktop apps like Spotify, IPTVnator and VLC (`app:spotify`, `app:iptvnator`, `app:vlc`). Paste any link to send it to the screen.
+- **Now playing, whatever it is.** Shows what the HTPC is playing right now, even for apps that don't tell Windows (Spotify, VLC, IPTVnator), detected from which apps are making sound. Artwork comes from the app, or songs are matched on iTunes or Deezer and videos against your Jellyfin library. Only real video (browser video sites, IPTVnator, VLC, Jellyfin, Plex, Kodi and other players) drives the lights; music, games and calls don't.
+- **Ambient mode** turns the TV into a quiet wall clock with weather, the next prayer time and a miniature of the floor plan. Underneath, a row of things to continue watching (or what's new): arrow keys pick, Enter plays, Escape closes.
 - **Sleep timer.** "Everything off in 45 minutes": pause, TV off, lights fade out, with a one-minute warning on the TV.
-- **Cameras.** Any camera in Home Assistant shows live in homefront, and motion while you're watching pops up on the TV with a snapshot.
-- **Home Assistant, both ways.** homefront publishes the HTPC's state (playing, CPU, memory, free disk, sleep timer) as Home Assistant sensors, and Home Assistant scripts, Assist and Siri drive homefront by firing a `homefront_command` event (`{"command": "scene", "scene": "movie"}`, `sleep_timer`, `ambient`, `pause`, `open`). New Jellyfin arrivals fire `homefront_new_media` for phone notifications.
-- **Open anything on the TV.** One tap opens Netflix, YouTube and friends in the HTPC's everyday browser, with your existing logins, or desktop apps like Spotify, IPTVnator and VLC (`app:spotify`, `app:iptvnator`, `app:vlc`). Paste any link to send it to the screen. On Android, *Share → homefront* does the same.
-- **Now playing, whatever it is.** Shows whatever is playing on the HTPC right now (the most recent if several are), detected from which apps are actually making sound, so it works even for apps that don't report to Windows (Spotify, VLC, IPTVnator). Titles come from Windows' media session or the app's window. Artwork comes from the app when it provides it, otherwise songs are matched on iTunes or Deezer and videos against your Jellyfin library. No API keys.
-- **Scenes.** Movie (TV on, HTPC input, cinema rooms dimmed warm), Evening, Bright, Lights off, Goodnight (pause, TV off, lights off).
-- **TV control** for LG webOS TVs: power, volume, mute, input and screen-off-with-sound, through Home Assistant and [LGTV Companion](https://github.com/JPersson77/LGTVCompanion).
-- **Ambient mode** turns the TV into a quiet wall clock with weather, the next prayer time, a miniature of the floor plan and what's playing. A row of things to continue watching (or what's new) sits underneath: arrow keys pick one, Enter plays it, Escape closes. It drifts slightly every minute.
-- **Wake-up light.** Choose when you want to be up, the days and how long the fade is; the bedroom ramps from a dim warm glow to bright daylight. The settings live in Home Assistant helpers, so it runs even if homefront is down.
-- **Lights left on.** Three minutes after you leave, your phone says which lights are still on, with *Turn everything off* and *Leave them on* buttons.
-- **Weather and prayer times** with no API keys (Open-Meteo and Aladhan). Sehri and Iftar appear automatically during Ramadan. Optional, all off by default: a notice on the TV at prayer times, pausing playback, and an Iftar countdown on the TV fifteen minutes before Maghrib.
-- **Guest passes.** Create a time-limited pass, show the QR code, and a guest is signed in on their phone with lights, TV and media. Settings and power stay with the owner. Turn a pass off and it stops working immediately.
-- **Guided light setup.** Tuya / Smart Life bulbs are linked through Home Assistant from inside homefront: paste the Smart Life user code and scan the QR code it shows.
+
+<p align="center"><img src="docs/screenshots/ambient.png" alt="Ambient mode on the TV: a large clock, weather, prayer time, a mini floor plan and a row of films to watch"></p>
+
+### The library
+
+- **Your Jellyfin library, played on the TV.** Browse, search and press *Play on TV*. A full-screen player opens on the HTPC, controlled from your phone. It resumes where you left off, reports progress to Jellyfin and moves to the next episode on its own. Subtitles come on in your language by default; switch subtitle or audio tracks from the phone (picture-based DVD and PGS subtitles are drawn into the video).
+
+### Your phone, your watch, your car
+
+- **Alerts** through the Home Assistant app: camera motion with a snapshot, new episodes, a light that stopped responding, homefront not answering. Routine alerts wait out quiet hours (23:00–07:00); motion while nobody is home always comes through.
+- **Lights left on.** When you leave, your phone says which lights are still on, with *Turn everything off* and *Leave them on* buttons.
+- **Lock screen, Control Centre, Apple Watch, Siri and Assist** run any scene or action through Home Assistant scripts ("Hey Siri, movie time").
+- **CarPlay.** Getting in the car at home pauses the HTPC and sends the lights-left-on nudge straight away. Driving home after dark, about a kilometre out, the living room and kitchen come on and the TV wakes up showing the clock. Parking counts you as home immediately.
+
+### Everything else
+
+- **Cameras.** Any camera in Home Assistant shows live in homefront, and motion while you're watching appears on the TV.
+- **Weather and prayer times** with no API keys (Open-Meteo and Aladhan). Sehri and Iftar appear automatically during Ramadan. Optional, all off by default: a notice on the TV at prayer times, pausing playback, and an Iftar countdown on the TV.
+- **Guest passes.** A time-limited pass with a QR code signs a guest in with lights, TV and media. Settings and power stay with the owner. Turn a pass off and it stops working immediately.
+- **Guided light setup.** Tuya / Smart Life bulbs are linked from inside homefront: paste the Smart Life user code and scan the QR code it shows.
 
 ## Screenshots
 
 | | |
 |---|---|
-| ![Remote with live screen mirror, key pad and now playing](docs/screenshots/remote.jpg) | ![Library details sheet with seasons and episodes](docs/screenshots/details.jpg) |
-| **Remote.** Tap the mirror to click on the TV. | **Library.** Play on the TV, resume or start over. |
-| ![Room sheet with brightness, warmth presets and per-bulb controls](docs/screenshots/room.jpg) | ![Ambient mode on the TV: a large clock, weather, prayer time and a mini floor plan](docs/screenshots/ambient.png) |
-| **Rooms.** Every bulb, or the whole room at once. | **Ambient mode** on the TV. |
+| ![Remote on a laptop: the live screen mirror, arrows and OK, media and volume](docs/screenshots/remote.jpg) | ![Library details sheet with seasons and episodes](docs/screenshots/details.jpg) |
+| **Remote, Screen view.** Tap the mirror to click on the TV. | **Library.** Play on the TV, resume or start over. |
+| ![Room sheet with brightness, warmth presets and per-bulb controls](docs/screenshots/room.jpg) | ![The Lights page with the floor plan, follow-what's-playing and scenes](docs/screenshots/lights.jpg) |
+| **Rooms.** Every bulb, or the whole room at once. | **Lights,** scenes and the wake-up light. |
 
 <p align="center">
-  <img src="docs/screenshots/phone-home.jpg" width="260" alt="homefront on a phone">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/phone-remote.jpg" width="260" alt="The remote on a phone">
+  <img src="docs/screenshots/phone-home.jpg" width="240" alt="homefront on a phone">
+  &nbsp;
+  <img src="docs/screenshots/phone-remote.jpg" width="240" alt="The touchpad remote on a phone, with Left and Right buttons, the keyboard and media controls">
+  &nbsp;
+  <img src="docs/screenshots/phone-lights.jpg" width="240" alt="The Lights page on a phone">
 </p>
 
 <details>
@@ -59,19 +91,20 @@ homefront runs on the HTPC that's plugged into the TV and becomes the one place 
 ## How it fits together
 
 ```
- phone / laptop / TV browser
-            │  HTTP + one WebSocket (live state, pointer and keyboard input)
-            ▼
- ┌─────────────────────── homefront.exe (on the HTPC, in the desktop session) ───────────────────────┐
- │  Windows: media session · Core Audio volume · SendInput · screen capture · Brave launcher/kiosk   │
- │  Home Assistant WebSocket client (lights, TV, Tuya setup)   Jellyfin client + HLS proxy           │
- │  LGTV Companion CLI (power, input, screen off)              Open-Meteo · Aladhan                  │
- └───────────────────────────────────────────────────────────────────────────────────────────────────┘
+ phone / laptop / TV browser                      iPhone: Home Assistant app, Watch, CarPlay, Siri
+            │  HTTP + one WebSocket                          │  push alerts, scripts, location
+            ▼                                                ▼
+ ┌──────────── homefront.exe (HTPC desktop session) ────────────┐   ┌──── Home Assistant (VM on the HTPC) ────┐
+ │ Windows: media sessions · audio levels · SendInput · capture │◄─►│ lights (Tuya) · TV (webOS) · camera      │
+ │ Jellyfin client + HLS proxy · Brave launcher and kiosk       │   │ automations · alerts · presence · voice  │
+ │ LGTV Companion CLI + wake-on-LAN · Open-Meteo · Aladhan      │   │ homefront_command / homefront_* sensors  │
+ └──────────────────────────────────────────────────────────────┘   └──────────────────────────────────────────┘
 ```
 
-- **Server:** .NET 10 minimal API, published as one self-contained `homefront.exe` (no runtime to install). It has to run in the logged-in desktop session, because that's where the screen, audio and media session live.
+- **Server:** .NET 10 minimal API, published as one self-contained `homefront.exe` (no runtime to install). It runs in the logged-in desktop session, because that's where the screen, audio and media sessions live.
 - **Front end:** Preact with htm and plain ES modules. No build step, and every dependency is vendored, so nothing loads from a CDN apart from the Inter font.
-- **Live state:** the server keeps one WebSocket to Home Assistant and pushes changes to every open dashboard over its own socket.
+- **Live state:** one WebSocket to Home Assistant; changes are pushed to every open dashboard over its own socket.
+- **Both ways with Home Assistant:** homefront publishes the HTPC's state (playing, CPU, memory, free disk, sleep timer, heartbeat) as `homefront_*` sensors. Home Assistant drives homefront by firing a `homefront_command` event: `scene`, `sleep_timer`, `ambient`, `close_kiosk`, `open`, `pause`, `play`, `tv_on`, `welcome`, `cinema_resume`. New Jellyfin arrivals fire `homefront_new_media`. The full list is in [docs/automations.md](docs/automations.md).
 - **Playback:** Jellyfin decides per title whether to copy the streams or transcode (Intel Quick Sync on the HTPC). The kiosk player plays the result with hls.js through a homefront proxy, so the browser only ever talks to homefront.
 
 ## Requirements
@@ -83,6 +116,8 @@ homefront runs on the HTPC that's plugged into the TV and becomes the one place 
 - [Brave](https://brave.com/) on the HTPC for launching sites and the kiosk player (any Chromium browser works; set its path in `config.json`)
 
 ## Install
+
+The short version is below; [docs/install.md](docs/install.md) walks through a whole home, from the HTPC to the phone.
 
 1. **Build** on any Windows machine with the .NET 10 SDK:
    ```powershell
@@ -119,7 +154,7 @@ Rooms are matched by name: a bulb called *Kitchen 1* lands in Kitchen automatica
 
 ### Away from home
 
-homefront is meant for a private network. To reach it from outside, use [Tailscale](https://tailscale.com/) rather than port forwarding. `tailscale serve --bg 80` gives it an HTTPS address on your tailnet, which also lets phones install it as a full app.
+homefront is meant for a private network. To reach it from outside, use [Tailscale](https://tailscale.com/) rather than port forwarding. `tailscale serve --bg 80` gives it an HTTPS address on your tailnet, which also lets phones install it as an app and paste from the clipboard. More homes, sharing with family, and the phone setup are in [docs/remote-access.md](docs/remote-access.md).
 
 ## Security
 
@@ -133,21 +168,25 @@ homefront is meant for a private network. To reach it from outside, use [Tailsca
 
 ```
 server/
-  Program.cs          endpoints, auth gate, live socket, background loops
+  Program.cs          endpoints, auth gate, live socket, background loops, Home Assistant commands
   HomeAssistant.cs    WebSocket client with reconnect and state cache
-  Jellyfin.cs         library, images, playback source, progress reporting
-  Automation.cs       rooms, scenes and the follow-what's-playing automation
-  WinMedia.cs         Windows media session (+ VLC window fallback)
+  Jellyfin.cs         library, images, playback source, subtitles, progress reporting
+  Automation.cs       rooms, scenes and follow-what's-playing
+  Extras.cs           sleep timer, TV notices, prayer times, cameras, Home Assistant sensors
+  WinMedia.cs         what's playing: media sessions, player windows, apps making sound
+  Art.cs              cover art from iTunes, Deezer and Jellyfin
   WinSystem.cs        volume, input injection, screen capture, power, stats
-  Apps.cs             browser launching, kiosk window, LGTV Companion CLI
+  Apps.cs             browser launching, kiosk window, LGTV Companion and wake-on-LAN
   Feeds.cs            weather and prayer times
   wwwroot/            the app: index.html, app.css, js/ (Preact + htm, no build)
 tools/
   build-icons.mjs     bundles the Lucide icons the UI uses into js/icons.mjs
   screenshots.mjs     regenerates docs/screenshots with Playwright and Edge
+  audit.mjs           layout audit: 134 page states across 9 screen sizes, from a 320 px phone to a 1080p TV
+docs/                 user guide, install, automations, remote access, troubleshooting
 ```
 
-Front-end changes need no build: edit `server/wwwroot` and refresh. To regenerate the screenshots, run a local instance on port 8090 and `node tools/screenshots.mjs`.
+Front-end changes need no build: edit `server/wwwroot` and refresh. To regenerate the screenshots or run the audit, start a local instance on port 8090 with automations switched off, then run `node tools/screenshots.mjs` or `node tools/audit.mjs`.
 
 ## Credits
 

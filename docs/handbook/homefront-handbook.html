@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>homefront Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#0f1726; --ink-2:#3b475c; --muted:#6b778a; --paper:#ffffff; --wash:#f3f6fa; --line:#dfe5ee; --lamp:#ffc94d; --lamp-deep:#b58300; }
+@page { size: A4; margin: 20mm 18mm 22mm; @bottom-left { content: "homefront Handbook"; font: 8pt Inter; color: #6b778a; } @bottom-right { content: counter(page); font: 8pt Inter; color: #6b778a; } }
+@page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font: 10pt/1.55 Inter, system-ui, sans-serif; color: var(--ink); background: var(--paper); }
+h1, h2, h3 { font-family: "Inter Tight", Inter, sans-serif; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); }
+h2 { font-size: 15pt; margin: 22pt 0 6pt; break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 14pt 0 4pt; break-after: avoid; }
+p, li { max-width: 150mm; }
+a { color: var(--ink); text-decoration-color: var(--lamp); text-decoration-thickness: 1.5pt; text-underline-offset: 2pt; }
+code { font: 8.6pt "JetBrains Mono", Consolas, monospace; background: var(--wash); padding: 1pt 3pt; border-radius: 3pt; }
+pre { background: var(--ink); color: #e6ecf4; padding: 9pt 11pt; border-radius: 6pt; overflow: hidden; white-space: pre-wrap; break-inside: avoid; }
+pre code { background: none; color: inherit; padding: 0; font-size: 8pt; }
+table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 8.8pt; break-inside: auto; }
+th { text-align: left; font-weight: 600; color: var(--ink-2); border-bottom: 1.2pt solid var(--ink); padding: 5pt 6pt; }
+td { border-bottom: 0.6pt solid var(--line); padding: 5pt 6pt; vertical-align: top; }
+tr { break-inside: avoid; }
+figure { margin: 10pt 0 14pt; break-inside: avoid; }
+figure img { max-width: 100%; max-height: 120mm; display: block; border-radius: 6pt; border: 0.6pt solid var(--line); background: var(--ink); }
+figcaption { font-size: 8pt; color: var(--muted); margin-top: 4pt; }
+ol, ul { padding-left: 14pt; }
+li { margin: 2pt 0; }
+
+/* cover: the house as a floor plan at night */
+.cover { height: 297mm; width: 210mm; background: var(--ink); color: #e6ecf4; position: relative; overflow: hidden; break-after: page; }
+.cover svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cover .words { position: absolute; left: 20mm; right: 20mm; bottom: 26mm; }
+.cover .mark { font: 500 54pt/1 "Inter Tight"; letter-spacing: -0.035em; margin: 0; color: #f4f7fb; }
+.cover .sub { font: 400 17pt/1.3 "Inter Tight"; color: var(--lamp); margin: 6mm 0 0; }
+.cover .line { font-size: 10pt; color: #9aa6b8; margin-top: 9mm; max-width: 120mm; }
+.cover .ed { position: absolute; right: 20mm; top: 18mm; font-size: 8.5pt; color: #9aa6b8; letter-spacing: 0.02em; }
+
+/* contents */
+.contents { break-after: page; padding-top: 14mm; }
+.contents h1 { font-size: 26pt; margin: 0 0 10mm; }
+.contents ol { list-style: none; padding: 0; margin: 0; }
+.contents li { max-width: none; border-top: 0.6pt solid var(--line); }
+.contents a { display: grid; grid-template-columns: 16mm 1fr; grid-template-rows: auto auto; padding: 5mm 0; text-decoration: none; }
+.contents .n { grid-row: span 2; font: 500 20pt "Inter Tight"; color: var(--lamp-deep); }
+.contents .t { font: 500 14pt "Inter Tight"; }
+.contents .k { color: var(--muted); font-size: 9.5pt; }
+.contents .about { margin-top: 14mm; color: var(--ink-2); max-width: 140mm; }
+
+/* chapters */
+.chapter { break-before: page; }
+.ch-head { display: grid; grid-template-columns: auto 1fr; gap: 7mm; align-items: end; border-bottom: 1.2pt solid var(--ink); padding-bottom: 6mm; margin-bottom: 8mm; }
+.ch-num { font: 500 54pt/0.85 "Inter Tight"; color: var(--lamp); letter-spacing: -0.04em; -webkit-text-stroke: 0.6pt var(--lamp-deep); }
+.ch-kicker { margin: 0 0 1mm; color: var(--muted); font-size: 9.5pt; }
+.ch-head h1 { margin: 0; font-size: 26pt; line-height: 1.05; }
+</style></head>
+<body>
+
+<div class="cover">
+  <svg viewBox="0 0 210 297" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="glowA" cx="0.62" cy="0.7" r="0.75"><stop offset="0" stop-color="#ffc94d" stop-opacity="0.55"/><stop offset="1" stop-color="#ffc94d" stop-opacity="0"/></radialGradient>
+      <radialGradient id="glowB" cx="0.4" cy="0.6" r="0.8"><stop offset="0" stop-color="#ffb347" stop-opacity="0.32"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+    </defs>
+    <g transform="translate(22 40)">
+      <rect x="0" y="0" width="98" height="70" fill="url(#glowB)"/>
+      <rect x="0" y="70" width="166" height="76" fill="url(#glowA)"/>
+      <g fill="none" stroke="#e6ecf4" stroke-opacity="0.85" stroke-width="0.6">
+        <rect x="0" y="0" width="166" height="146"/>
+        <path d="M98 0V70M0 70H166M98 36H166"/>
+      </g>
+      <g fill="#9aa6b8" font-family="Inter" font-size="3.4">
+        <text x="5" y="8">Kitchen</text><text x="103" y="8">Bedroom</text><text x="103" y="44">Study</text><text x="5" y="78">Living Room</text>
+      </g>
+      <circle cx="83" cy="146" r="2.2" fill="#ffc94d"/>
+    </g>
+  </svg>
+  <p class="ed">Edition October 2026</p>
+  <div class="words">
+    <p class="mark">homefront</p>
+    <p class="sub">The Handbook</p>
+    <p class="line">Lights, the TV, the library, the PC, the camera and the phone in your pocket, from one place. How to live with it, set it up and keep it running.</p>
+  </div>
+</div>
+
+<div class="contents">
+  <h1>Contents</h1>
+  <ol><li><a href="#ch-user-guide"><span class="n">01</span><span class="t">User guide</span><span class="k">Living with homefront</span></a></li><li><a href="#ch-install"><span class="n">02</span><span class="t">Install</span><span class="k">Setting up a home</span></a></li><li><a href="#ch-automations"><span class="n">03</span><span class="t">Automations</span><span class="k">How the house thinks</span></a></li><li><a href="#ch-remote-access"><span class="n">04</span><span class="t">Remote access</span><span class="k">Reaching home from anywhere</span></a></li><li><a href="#ch-troubleshooting"><span class="n">05</span><span class="t">Troubleshooting</span><span class="k">When something's off</span></a></li></ol>
+  <p class="about">homefront runs on the Windows PC behind the TV. Home Assistant handles the devices and the timing underneath it, Jellyfin holds the library, and Tailscale makes all of it reachable from anywhere without opening anything to the internet. Every part is free software.</p>
+</div>
+
+
+<section class="chapter" id="ch-user-guide">
+  <header class="ch-head">
+    <div class="ch-num">01</div>
+    <div><p class="ch-kicker">Living with homefront</p><h1>User guide</h1></div>
+  </header>
+  <p>homefront opens from its icon on your phone's home screen, or at the house's homefront address in any browser. Everything below works the same on a phone, a tablet, a laptop and the TV.</p>
+<figure><img alt="homefront on a phone" src="../screenshots/phone-home.jpg" /><figcaption>homefront on a phone</figcaption></figure>
+<h2 id="home">Home</h2>
+<p>The home screen is the house at a glance.</p>
+<ul>
+<li><strong>The floor plan.</strong> Each room glows with the colour and brightness of its lights. Tap a room to change its lights; tap the bulb button in a corner to switch the whole room on or off. A yellow dot on a wall marks the room where something is playing.</li>
+<li><strong>Now playing.</strong> Whatever the HTPC is playing, with artwork and controls: play, pause, skip, seek, and <strong>CC</strong> for subtitles and audio language when it's homefront's own player.</li>
+<li><strong>Scenes.</strong> One tap sets the whole house:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Scene</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Movie</td>
+<td>TV on with the HTPC, the TV room dimmed warm, other rooms off</td>
+</tr>
+<tr>
+<td>Evening</td>
+<td>Every light at a soft 50%</td>
+</tr>
+<tr>
+<td>Bright</td>
+<td>Everything full, neutral white</td>
+</tr>
+<tr>
+<td>Late night</td>
+<td>Living room and kitchen at 1% and the warmest white; everything else off</td>
+</tr>
+<tr>
+<td>Lights off</td>
+<td>Every light off</td>
+</tr>
+<tr>
+<td>Goodnight</td>
+<td>Pauses what's playing, turns the TV off, switches every light off</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>TV.</strong> Power, the HTPC input, screen off (sound stays on) and the sleep timer. Volume is the big <strong>−</strong> and <strong>+</strong>: tap to step, hold to keep going, or tap the number, type a level and press Return.</li>
+</ul>
+<figure><img alt="TV volume" src="../screenshots/tv-volume.png" /><figcaption>TV volume</figcaption></figure>
+<ul>
+<li><strong>HTPC.</strong> A live view of the screen, PC volume, the <strong>Ambient on TV</strong> clock, and the tiles that open Netflix, YouTube, DStv, IPTVnator, Spotify and the rest on the TV.</li>
+</ul>
+<h2 id="remote">Remote</h2>
+<p>On a phone, the remote opens as a touchpad, so you can watch the TV rather than the phone.</p>
+<figure><img alt="The touchpad remote" src="../screenshots/phone-remote.jpg" /><figcaption>The touchpad remote</figcaption></figure>
+<table>
+<thead>
+<tr>
+<th>Do this</th>
+<th>To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Drag one finger</td>
+<td>Move the pointer</td>
+</tr>
+<tr>
+<td>Tap</td>
+<td>Click</td>
+</tr>
+<tr>
+<td>Tap, then drag straight away</td>
+<td>Drag (windows, sliders, selecting text)</td>
+</tr>
+<tr>
+<td>Two fingers, or the strip down the right edge</td>
+<td>Scroll</td>
+</tr>
+<tr>
+<td>Hold, or tap with two fingers</td>
+<td>Right-click</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Left</strong> and <strong>Right</strong> under the pad are mouse buttons. Holding Left lets you drag too.</li>
+<li><strong>Keyboard</strong> opens your phone's keyboard; every key goes to the TV as you press it, including Backspace and Enter. Extra keys appear above it: Ctrl, Alt, Win, Esc, Tab, the arrows and F11. Tap Ctrl then C for Ctrl+C.</li>
+<li><strong>Paste</strong> types your phone's clipboard into whatever is selected on the TV. iPhone asks you to confirm with a small <em>Paste</em> bubble. On the plain home address (not the Tailscale one), a field appears instead: long-press it and choose Paste.</li>
+<li><strong>Under every tab:</strong> previous, play/pause and next, plus PC volume down, mute and up.</li>
+</ul>
+<p>The <strong>Screen</strong> tab mirrors the TV, for when you can't see it: tap anything on the picture to click it there. The <strong>Buttons</strong> tab is a classic remote: arrows, OK, Back, Esc, full screen, Close tab, Switch app and Desktop. homefront remembers the tab you used last.</p>
+<h2 id="library">Library</h2>
+<p>Your films and series. Search, browse, and tap a title for details, seasons and episodes. <strong>Play on TV</strong> opens the full-screen player on the HTPC and puts the controls on your phone. It remembers where you stopped, plays the next episode on its own, and switches subtitles and audio language from <strong>CC</strong>. Subtitles come on in your language by default.</p>
+<h2 id="lights">Lights</h2>
+<figure><img alt="The Lights page" src="../screenshots/lights.jpg" /><figcaption>The Lights page</figcaption></figure>
+<ul>
+<li><strong>Rooms and scenes,</strong> as on the home screen, plus a list of every room.</li>
+<li><strong>Follow what's playing.</strong> When a video plays on the HTPC, the TV room dims; pausing lifts it a little; stopping puts every bulb back exactly as it was. It only ever dims: if you've set Late night, it stays at 1%. Lights that were off stay off. Music, games and calls don't count, only video.</li>
+<li><strong>Wake-up light.</strong> Choose when you want the bedroom fully bright, the days, and how long the fade takes (5 to 45 minutes), then switch it on. The bedroom glows dim and warm first and climbs to bright daylight.</li>
+</ul>
+<figure><img alt="Wake-up light" src="../screenshots/wake.png" /><figcaption>Wake-up light</figcaption></figure>
+<h2 id="the-tv-clock">The TV clock</h2>
+<p><strong>Ambient on TV</strong> (HTPC card) turns the TV into a quiet clock with the weather, the next prayer time and a small floor plan. Underneath is a row of things to continue watching, or what's new if you're not in the middle of anything.</p>
+<table>
+<thead>
+<tr>
+<th>On a keyboard</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>← →</td>
+<td>Pick a title</td>
+</tr>
+<tr>
+<td>Enter</td>
+<td>Play it</td>
+</tr>
+<tr>
+<td>Esc or Backspace</td>
+<td>Close the clock</td>
+</tr>
+</tbody>
+</table>
+<p>It also closes from homefront (<strong>Close ambient</strong> on the HTPC card) or the <em>Close the clock</em> script on your phone or watch.</p>
+<h2 id="things-that-happen-by-themselves">Things that happen by themselves</h2>
+<table>
+<thead>
+<tr>
+<th>When</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20 minutes before sunset, TV on, living room dark</td>
+<td>The living room climbs slowly to a warm 60%. If you were already watching, it carries on through pauses and new episodes; if a film starts from scratch, follow-what's-playing takes over. Touch the lights and it stops.</td>
+</tr>
+<tr>
+<td>You come home after dark</td>
+<td>The living room comes on.</td>
+</tr>
+<tr>
+<td>Driving home after dark (CarPlay), about 1 km out</td>
+<td>Living room and kitchen on, TV on showing the clock.</td>
+</tr>
+<tr>
+<td>You leave with lights on</td>
+<td>Your phone asks: <em>Turn everything off</em> or <em>Leave them on</em>.</td>
+</tr>
+<tr>
+<td>Ten minutes after everyone has left</td>
+<td>Goodnight, unless you tapped <em>Leave them on</em>.</td>
+</tr>
+<tr>
+<td>Your wake-up time</td>
+<td>The bedroom has faded up to daylight.</td>
+</tr>
+<tr>
+<td>Motion on the camera</td>
+<td>A phone alert with a snapshot (while you're out, always; at home, outside quiet hours) and a notice on the TV.</td>
+</tr>
+<tr>
+<td>Something new arrives in the library</td>
+<td>A phone alert.</td>
+</tr>
+</tbody>
+</table>
+<p>Quiet hours are 23:00 to 07:00: routine alerts wait until morning; motion while nobody's home always comes through.</p>
+<h2 id="your-phone-watch-and-car">Your phone, watch and car</h2>
+<p>All of these use the <strong>Home Assistant app</strong> and the scripts it shows (Movie time, Evening lights, Late night lights, Goodnight, Morning lights, Pause the TV, Clock on the TV, Close the clock, sleep timers).</p>
+<p><strong>Lock screen.</strong> Long-press the lock screen → Customise → Lock Screen → add a widget → Home Assistant → choose scripts.</p>
+<p><strong>Control Centre</strong> (iOS 18 and later). Open Control Centre → <strong>+</strong> → Add a Control → Home Assistant → Script.</p>
+<p><strong>Apple Watch.</strong> Home Assistant app → Settings → Companion App → Apple Watch → add scripts. They appear in the watch app and as complications.</p>
+<p><strong>Siri.</strong> Shortcuts → <strong>+</strong> → Home Assistant → <strong>Run Script</strong> → pick one, and name the shortcut what you'll say ("Movie time"). If the script list is empty, use <strong>Perform Action</strong> and type its name instead, for example <code>script.homefront_movie</code>.</p>
+<p><strong>Lights when your alarm stops.</strong> Shortcuts → Automation → <strong>+</strong> → Alarm → Is Stopped → Run Immediately → Run Script → Morning lights.</p>
+<p><strong>CarPlay.</strong> Home Assistant app → Settings → Companion App → CarPlay to put scripts on the car's screen. Then two Shortcuts automations tell the house when you come and go:</p>
+<table>
+<thead>
+<tr>
+<th>Shortcuts automation</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CarPlay → Connects → Run Immediately</td>
+<td>Home Assistant → Run Script → <strong>Car connected</strong></td>
+</tr>
+<tr>
+<td>CarPlay → Disconnects → Run Immediately</td>
+<td>Home Assistant → Run Script → <strong>Car disconnected</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="guests">Guests</h2>
+<p>Settings → Guest passes → name and how long → show the QR code. Guests get lights, the TV and media, never settings or power. Switch a pass off and it stops working at once.</p>
+<h2 id="away-from-home">Away from home</h2>
+<p>homefront and the Home Assistant app work the same anywhere. Tailscale on your phone switches itself on when they need it; see <a href="#ch-remote-access">Remote access</a>.</p>
+</section>
+<section class="chapter" id="ch-install">
+  <header class="ch-head">
+    <div class="ch-num">02</div>
+    <div><p class="ch-kicker">Setting up a home</p><h1>Install</h1></div>
+  </header>
+  <p>A full home takes about a day, plus half an hour of the household's time for the steps only they can do (approving sign-ins, scanning QR codes, installing apps on their phones). Do the steps in order; each one leans on the one before.</p>
+<h2 id="what-you-need">What you need</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTPC: Windows 10/11 Pro, 4 cores, 8 GB RAM, wired Ethernet</td>
+<td>Yes</td>
+<td>Pro for Hyper-V. Intel graphics give Jellyfin hardware transcoding (Quick Sync). It stays on and logged in.</td>
+</tr>
+<tr>
+<td>TV on the HTPC's HDMI</td>
+<td>Yes</td>
+<td>LG webOS gets power, input, volume and on-screen notices. Other TVs get everything except TV control.</td>
+</tr>
+<tr>
+<td>Router with DHCP reservations</td>
+<td>Yes</td>
+<td>Fixed addresses for the HTPC, Home Assistant, the TV and cameras.</td>
+</tr>
+<tr>
+<td>Smart bulbs</td>
+<td>Optional</td>
+<td>Anything Home Assistant supports. Tuya / Smart Life brands link from inside homefront.</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td>Optional</td>
+<td>ONVIF-capable.</td>
+</tr>
+<tr>
+<td>Phone with the Home Assistant app</td>
+<td>Recommended</td>
+<td>Alerts, presence, widgets, watch, CarPlay.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-survey-the-home">1. Survey the home</h2>
+<p>Write down the TV model, router, bulbs and the app they use, cameras, the HTPC's specs and where the media lives. Note anything already installed so nothing gets removed by accident.</p>
+<h2 id="2-prepare-the-htpc">2. Prepare the HTPC</h2>
+<ol>
+<li>Windows 11 Pro on wired Ethernet, automatic sign-in, sleep off.</li>
+<li>If the TV's HDMI port can't do 4K at 60 Hz, set the output to 1080p at 60 Hz.</li>
+<li>Install OpenSSH Server for remote support: <code>winget install Microsoft.OpenSSH.Preview</code>.</li>
+<li>Install Tailscale and sign in to the household's tailnet (see <a href="#ch-remote-access">Remote access</a>). Enable HTTPS certificates in the Tailscale admin console.</li>
+</ol>
+<h2 id="3-router">3. Router</h2>
+<p>Reserve fixed addresses for the HTPC, the Home Assistant virtual machine (by its MAC address, once it exists), the TV and each camera.</p>
+<h2 id="4-tv">4. TV</h2>
+<ol>
+<li>Install <a href="https://github.com/JPersson77/LGTVCompanion">LGTV Companion</a> on the HTPC and pair it; accept the prompt on the TV.</li>
+<li>On the TV, turn on <strong>Quick Start+</strong> (Settings → General → Devices → TV Management) and <strong>Turn on via Wi-Fi</strong> (Settings → General → Devices → External Devices → TV On With Mobile). The second also covers a network cable. Without them, the TV may not wake from deep standby.</li>
+</ol>
+<h2 id="5-jellyfin">5. Jellyfin</h2>
+<ol>
+<li><code>winget install Jellyfin.Server</code>. It installs as a Windows service.</li>
+<li>Run the setup wizard and add the libraries.</li>
+<li>Dashboard → Playback → Transcoding: <strong>Intel Quick Sync</strong>.</li>
+<li>Allow TCP 8096 for private networks in Windows Firewall.</li>
+</ol>
+<p>If the service won't start after pointing it at a new drive, give the <code>NETWORK SERVICE</code> account read access to the media folders.</p>
+<h2 id="6-home-assistant">6. Home Assistant</h2>
+<ol>
+<li>Download the Home Assistant OS VHDX and create a Hyper-V virtual machine: Generation 2, 2 vCPU, 2 GB RAM, Secure Boot off, connected to an external switch, checkpoints off, start automatically.</li>
+<li>Open Home Assistant, create the owner account, set the home location and units.</li>
+<li>Add integrations:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Integration</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LG webOS TV</td>
+<td>TV state, volume, inputs</td>
+</tr>
+<tr>
+<td>Tuya (via the Smart Life app's QR code) or the bulbs' own integration</td>
+<td>Lights</td>
+</tr>
+<tr>
+<td>ONVIF</td>
+<td>Cameras (needs an ONVIF account set in the camera's own app)</td>
+</tr>
+<tr>
+<td>The router's integration (e.g. Huawei LTE)</td>
+<td>Presence from the Wi-Fi</td>
+</tr>
+<tr>
+<td>Mobile app (automatic when the phone app signs in)</td>
+<td>Alerts, GPS presence, widgets</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>Profile → Security → create a <strong>long-lived access token</strong> for homefront.</li>
+</ol>
+<h2 id="7-homefront">7. homefront</h2>
+<ol>
+<li>Build: <code>cd server</code> then <code>dotnet publish -c Release -o ..\publish</code>.</li>
+<li>Copy the <code>publish</code> folder to the HTPC, e.g. <code>C:\Users\&lt;you&gt;\homefront</code>.</li>
+<li>Run <code>homefront.exe</code> once to create <code>data\config.json</code>; fill in the Home Assistant URL and token, the Jellyfin URL, API key and user id, and the location.</li>
+<li>Allow TCP 80 for private networks in Windows Firewall.</li>
+<li>Put a shortcut to <code>homefront.exe</code> in the Startup folder (<code>shell:startup</code>). It must run in the signed-in desktop session, not as a service, because that's where the screen, audio and media sessions are.</li>
+<li>Open homefront, sign in with <strong>admin / homefront</strong> and change the password in Settings straight away.</li>
+<li>Settings: name the home and the owner, check the rooms, the cinema rooms and the shortcuts.</li>
+</ol>
+<h2 id="8-automations">8. Automations</h2>
+<p>Create the Home Assistant scripts, helpers and automations in <a href="#ch-automations">Automations</a>, and expose the scripts to Assist (Settings → Voice assistants → Expose) so Siri, the watch and CarPlay can use them.</p>
+<h2 id="9-remote-access">9. Remote access</h2>
+<p>On the HTPC:</p>
+<pre><code class="language-powershell">tailscale serve --bg 80                                   # homefront over HTTPS on the tailnet
+tailscale set --advertise-routes=&lt;home subnet&gt;/24         # the home network, approved once in the admin console
+netsh interface portproxy add v4tov4 listenport=8123 connectaddress=&lt;home assistant ip&gt; connectport=80
+# then a firewall rule for TCP 8123 that only accepts 100.64.0.0/10 (the tailnet)
+</code></pre>
+<p>Set Home Assistant's internal URL to its home address and its external URL to <code>http://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net:8123</code>.</p>
+<h2 id="10-phones">10. Phones</h2>
+<ol>
+<li>Install the Home Assistant app and sign in. Allow notifications and location <strong>Always</strong> with precise location.</li>
+<li>In the app: Settings → Companion App → the server → <strong>Internal URL</strong> → add the home Wi-Fi's name.</li>
+<li>Install Tailscale, sign in, and set On Demand to <strong>Do nothing</strong> for Wi-Fi and cellular.</li>
+<li>Open homefront at <code>https://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net</code> and add it to the home screen.</li>
+<li>Set up widgets, Control Centre, the watch, Siri and CarPlay (<a href="#your-phone-watch-and-car">User guide</a>).</li>
+</ol>
+<h2 id="11-check">11. Check</h2>
+<ul>
+<li>Run the layout audit on a test copy: <code>node tools/audit.mjs</code> (134 page states, 9 screen sizes).</li>
+<li>Trigger a test notification, a motion alert and each scene.</li>
+<li>Play something from the library with subtitles; check the remote, the TV clock and a TV notice.</li>
+<li>Switch the TV off, wait five minutes, switch it on from homefront.</li>
+</ul>
+<h2 id="12-hand-over">12. Hand over</h2>
+<p>Replace every default password, walk the household through the <a href="#ch-user-guide">User guide</a>, and write down what was installed and where.</p>
+</section>
+<section class="chapter" id="ch-automations">
+  <header class="ch-head">
+    <div class="ch-num">03</div>
+    <div><p class="ch-kicker">How the house thinks</p><h1>Automations</h1></div>
+  </header>
+  <p>homefront and Home Assistant split the work: Home Assistant owns the devices, timing and alerts, so they keep running if homefront stops; homefront owns everything only the HTPC can see (what's playing, the screen, the keyboard and mouse) and the dashboard.</p>
+<h2 id="how-they-talk">How they talk</h2>
+<table>
+<thead>
+<tr>
+<th>Direction</th>
+<th>Name</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home Assistant → homefront</td>
+<td>event <code>homefront_command</code></td>
+<td>Ask homefront to do something (table below)</td>
+</tr>
+<tr>
+<td>homefront → Home Assistant</td>
+<td><code>binary_sensor.homefront_playing</code></td>
+<td>Something is playing; attributes <code>title</code>, <code>app</code>, <code>video</code></td>
+</tr>
+<tr>
+<td>homefront → Home Assistant</td>
+<td><code>sensor.homefront_htpc_cpu</code>, <code>_memory</code>, <code>_disk_&lt;drive&gt;_free</code></td>
+<td>HTPC health</td>
+</tr>
+<tr>
+<td>homefront → Home Assistant</td>
+<td><code>sensor.homefront_sleep_timer</code></td>
+<td>Minutes left</td>
+</tr>
+<tr>
+<td>homefront → Home Assistant</td>
+<td><code>sensor.homefront_heartbeat</code></td>
+<td>Updated every minute; an alert fires when it goes stale</td>
+</tr>
+<tr>
+<td>homefront → Home Assistant</td>
+<td>event <code>homefront_new_media</code></td>
+<td>New films and episodes, batched per show</td>
+</tr>
+</tbody>
+</table>
+<h3 id="homefront_command"><code>homefront_command</code></h3>
+<table>
+<thead>
+<tr>
+<th><code>command</code></th>
+<th>Extra data</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scene</code></td>
+<td><code>scene</code>: <code>movie</code>, <code>evening</code>, <code>bright</code>, <code>latenight</code>, <code>off</code>, <code>goodnight</code></td>
+<td>Runs a scene</td>
+</tr>
+<tr>
+<td><code>sleep_timer</code></td>
+<td><code>minutes</code> (none cancels)</td>
+<td>Starts or cancels the sleep timer</td>
+</tr>
+<tr>
+<td><code>ambient</code></td>
+<td></td>
+<td>Opens the TV clock</td>
+</tr>
+<tr>
+<td><code>close_kiosk</code></td>
+<td></td>
+<td>Closes the TV clock or player</td>
+</tr>
+<tr>
+<td><code>open</code></td>
+<td><code>url</code> (or <code>app:spotify</code> etc.)</td>
+<td>Opens something on the TV</td>
+</tr>
+<tr>
+<td><code>pause</code> / <code>play</code></td>
+<td></td>
+<td>Pauses or resumes whatever is playing</td>
+</tr>
+<tr>
+<td><code>tv_on</code></td>
+<td></td>
+<td>Wakes the TV, retrying until it answers</td>
+</tr>
+<tr>
+<td><code>welcome</code></td>
+<td></td>
+<td>TV on, HTPC input, clock showing, unless something is already on screen</td>
+</tr>
+<tr>
+<td><code>cinema_resume</code></td>
+<td></td>
+<td>Follow-what's-playing takes over after the sunset fade hands over</td>
+</tr>
+</tbody>
+</table>
+<p>Example script:</p>
+<pre><code class="language-yaml">alias: Movie time
+sequence:
+  - event: homefront_command
+    event_data: { command: scene, scene: movie }
+</code></pre>
+<h2 id="scripts">Scripts</h2>
+<p>These are what the phone, the watch, CarPlay, Siri and Assist see.</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Movie time</td>
+<td>Scene: Movie</td>
+</tr>
+<tr>
+<td>Evening lights / Bright lights / All lights off</td>
+<td>Scenes</td>
+</tr>
+<tr>
+<td>Late night lights</td>
+<td>Scene: Late night</td>
+</tr>
+<tr>
+<td>Goodnight</td>
+<td>Scene: Goodnight</td>
+</tr>
+<tr>
+<td>Morning lights</td>
+<td>Bedroom to full daylight</td>
+</tr>
+<tr>
+<td>Sleep timer 30 minutes / 1 hour</td>
+<td>Sleep timer</td>
+</tr>
+<tr>
+<td>Clock on the TV / Close the clock</td>
+<td>The TV clock</td>
+</tr>
+<tr>
+<td>Pause the TV</td>
+<td>Pause</td>
+</tr>
+<tr>
+<td>Car connected / Car disconnected</td>
+<td>Run by the phone's CarPlay automations</td>
+</tr>
+<tr>
+<td>Lights-left-on nudge</td>
+<td>The actionable "lights are still on" notification</td>
+</tr>
+</tbody>
+</table>
+<h2 id="helpers">Helpers</h2>
+<table>
+<thead>
+<tr>
+<th>Helper</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wake-up light (on/off), Wake-up time, Wake-up days, Wake-up fade minutes</td>
+<td>The wake-up light; edited on homefront's Lights page</td>
+</tr>
+<tr>
+<td>Keep lights on while away</td>
+<td>Set by <em>Leave them on</em>; cleared when you get home</td>
+</tr>
+<tr>
+<td>Driving</td>
+<td>Set by the car scripts</td>
+</tr>
+<tr>
+<td>Sunset fading</td>
+<td>On while the sunset fade runs; homefront leaves the lights alone meanwhile</td>
+</tr>
+<tr>
+<td>Quiet hours (schedule, 23:00–07:00)</td>
+<td>Holds back routine alerts</td>
+</tr>
+<tr>
+<td>Almost home (zone, 1 km, passive)</td>
+<td>The driving-home welcome</td>
+</tr>
+</tbody>
+</table>
+<h2 id="automations">Automations</h2>
+<table>
+<thead>
+<tr>
+<th>Automation</th>
+<th>Trigger</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sunset: fade the living room on</td>
+<td>20 min before sunset, TV on, living room dark</td>
+<td>30 one-minute steps from 5% to a warm 60%. If a video was being watched when it started, it runs to the end through pauses and new episodes; if nothing was and a video starts, it stops and sends <code>cinema_resume</code>. Any manual change stops it.</td>
+</tr>
+<tr>
+<td>TV on after dark</td>
+<td>TV switches on after sunset</td>
+<td>Living room on</td>
+</tr>
+<tr>
+<td>Arriving home after dark</td>
+<td>You arrive, after sunset, living room dark</td>
+<td>Living room to 60% warm</td>
+</tr>
+<tr>
+<td>Wake-up light</td>
+<td>The fade-start time on a chosen day</td>
+<td>Bedroom ramps warm-to-daylight, one step a minute</td>
+</tr>
+<tr>
+<td>Everyone left: Goodnight</td>
+<td>Away for 10 minutes</td>
+<td>Goodnight, unless <em>Leave them on</em></td>
+</tr>
+<tr>
+<td>Nudge: lights left on</td>
+<td>Away for 3 minutes with lights on (and not already asked by the car)</td>
+<td>The lights-left-on notification</td>
+</tr>
+<tr>
+<td>Nudge: handle the reply</td>
+<td>A button on that notification</td>
+<td><em>Turn everything off</em> runs Goodnight; <em>Leave them on</em> sets the helper</td>
+</tr>
+<tr>
+<td>Back home: clear "keep lights on"</td>
+<td>You arrive</td>
+<td>Clears the helper</td>
+</tr>
+<tr>
+<td>Driving home: lights on and the TV clock</td>
+<td>Driving, about 1 km out, after dark, out for 10+ minutes</td>
+<td>Living room and kitchen on, <code>welcome</code></td>
+</tr>
+<tr>
+<td>TV: switch on through the HTPC</td>
+<td>Anything asks Home Assistant to turn the TV on</td>
+<td><code>tv_on</code> (Home Assistant's LG integration can't wake the TV by itself)</td>
+</tr>
+<tr>
+<td>Alert: new on Jellyfin</td>
+<td><code>homefront_new_media</code></td>
+<td>Phone alert</td>
+</tr>
+<tr>
+<td>Alert: a light isn't responding</td>
+<td>A bulb unavailable for 10 minutes</td>
+<td>Phone alert</td>
+</tr>
+<tr>
+<td>Alert: homefront stopped responding</td>
+<td>Heartbeat stale for 5 minutes</td>
+<td>Phone alert</td>
+</tr>
+<tr>
+<td>Alert: camera motion</td>
+<td>Motion on the camera</td>
+<td>Phone alert with a snapshot; away always, home outside quiet hours</td>
+</tr>
+</tbody>
+</table>
+<h2 id="inside-homefront">Inside homefront</h2>
+<p><strong>Follow what's playing</strong> (Lights page) dims the cinema rooms while a video plays and lifts them a little when paused. It saves the lights the moment playback starts and restores them when it stops. It never brightens: each light goes to whichever is lower, its own level or the cinema level. A change you make during playback becomes the new state to restore. While the sunset fade runs, it stays out of the way.</p>
+<p><strong>What counts as video:</strong> homefront's own player; browser tabs from video sites (a tab that reports an album, such as YouTube Music or Spotify Web, is music); and IPTVnator, VLC, Jellyfin, Plex, Kodi, Stremio, mpv, MPC, PotPlayer and the Windows media players. Music apps, games and calls never touch the lights.</p>
+<p><strong>Sleep timer:</strong> one minute before the end, a notice on the TV; at the end, Goodnight.</p>
+<p><strong>TV notices</strong> (LG only): motion, the sleep-timer warning and, if switched on, prayer times. They're text only: the TV doesn't answer notices that carry a picture.</p>
+</section>
+<section class="chapter" id="ch-remote-access">
+  <header class="ch-head">
+    <div class="ch-num">04</div>
+    <div><p class="ch-kicker">Reaching home from anywhere</p><h1>Remote access</h1></div>
+  </header>
+  <p>Nothing in the house is reachable from the internet. At home, phones talk to the HTPC over Wi-Fi; away, they go through <a href="https://tailscale.com/">Tailscale</a>, a private network that the phone switches on only when it's needed.</p>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>At home</th>
+<th>Away</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>homefront</td>
+<td><code>https://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net</code> (or <code>http://&lt;htpc&gt;</code>)</td>
+<td><code>https://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net</code></td>
+</tr>
+<tr>
+<td>Home Assistant app</td>
+<td>Internal URL, used on the home Wi-Fi</td>
+<td>External URL <code>http://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net:8123</code></td>
+</tr>
+<tr>
+<td>Jellyfin</td>
+<td><code>http://&lt;htpc&gt;:8096</code></td>
+<td><code>http://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net:8096</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="on-the-htpc">On the HTPC</h2>
+<ul>
+<li><code>tailscale serve --bg 80</code> gives homefront a real HTTPS certificate, which lets phones install it as an app and paste from the clipboard.</li>
+<li>A Windows port proxy forwards 8123 to Home Assistant; its firewall rule only accepts the tailnet (100.64.0.0/10), so neither the home network nor the internet can use it.</li>
+<li><code>tailscale set --advertise-routes=&lt;home subnet&gt;/24</code>, approved once in the admin console, makes home addresses work while Tailscale is on.</li>
+</ul>
+<h2 id="on-each-phone">On each phone</h2>
+<ul>
+<li>Tailscale's <strong>On Demand</strong> set to <strong>Do nothing</strong> for Wi-Fi and cellular. Tailscale then switches itself on whenever an app looks up a tailnet name and stays off otherwise.</li>
+<li>The Home Assistant app's <strong>Internal URL</strong> lists the home Wi-Fi's name, so the app talks to the house directly when it's home.</li>
+</ul>
+<p>Alerts never need the VPN: they arrive through Apple's or Google's push service. Home and away come from the router seeing the phone on the Wi-Fi as well as GPS.</p>
+<h3 id="when-the-vpn-switches-on">When the VPN switches on</h3>
+<ul>
+<li>Opening homefront from its icon (it uses the Tailscale address, so it works everywhere).</li>
+<li>The Home Assistant app reporting your location while you're out. That's what makes the driving-home welcome work.</li>
+<li>Home Assistant widgets and watch complications, which can't always tell they're at home.</li>
+</ul>
+<p>If you'd rather Tailscale only came on while driving, add <strong>Tailscale → Connect</strong> to the start of the <em>CarPlay connects</em> automation and <strong>Tailscale → Disconnect</strong> (after a 30-second wait) to the end of <em>CarPlay disconnects</em>.</p>
+<h2 id="more-than-one-home">More than one home</h2>
+<p>Each home gets its own tailnet, owned by the household that lives there. Access between homes uses Tailscale <strong>machine sharing</strong>: the owner of a home shares just its HTPC with a named person (admin console → the machine → Share), and it appears in that person's tailnet beside their own devices.</p>
+<table>
+<thead>
+<tr>
+<th>Who</th>
+<th>Gets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The household</td>
+<td>Their own home, through their own tailnet. Family members without Tailscale use homefront logins or guest passes at home.</td>
+</tr>
+<tr>
+<td>Family elsewhere (e.g. you reaching your parents' home)</td>
+<td>That home's HTPC, shared to them. Never the rest of the network behind it.</td>
+</tr>
+<tr>
+<td>Whoever supports the install</td>
+<td>Each home's HTPC, shared by its owner and revocable by them at any time.</td>
+</tr>
+</tbody>
+</table>
+<p>One connection reaches every home shared with you; nothing is shared back the other way. Sharing covers the HTPC itself, not the network behind it, which is enough because homefront and Home Assistant are both reached through the HTPC. A tailnet on the free plan holds three people; bigger households need Tailscale's paid personal plan.</p>
+<h2 id="known-limit">Known limit</h2>
+<p>If you're away on a network that uses the same address range as home (192.168.8.x is the default on many routers), home addresses point at that network instead. The Tailscale names keep working.</p>
+</section>
+<section class="chapter" id="ch-troubleshooting">
+  <header class="ch-head">
+    <div class="ch-num">05</div>
+    <div><p class="ch-kicker">When something's off</p><h1>Troubleshooting</h1></div>
+  </header>
+  <p>Support works remotely over Tailscale and SSH; most fixes take a few minutes and no visit.</p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>homefront won't load</td>
+<td>homefront isn't running in the desktop session</td>
+<td>Sign in to the HTPC; start <code>homefront.exe</code> from the Startup shortcut. Check <code>data\homefront.log</code>.</td>
+</tr>
+<tr>
+<td>"Reconnecting" banner</td>
+<td>HTPC asleep, or the network dropped</td>
+<td>Wake the HTPC; check its network cable.</td>
+</tr>
+<tr>
+<td>Lights or TV don't respond</td>
+<td>Home Assistant can't be reached, or the device is offline</td>
+<td>Look at the status dots in homefront's side rail; check the device in Home Assistant. A Tuya bulb switched off at the wall shows as unavailable.</td>
+</tr>
+<tr>
+<td>TV won't switch on</td>
+<td>Deep standby: the TV's network is asleep</td>
+<td>On the TV, turn on <strong>Quick Start+</strong> and <strong>Turn on via Wi-Fi</strong>. homefront retries for 25 seconds; if it still fails, the log says <em>TV didn't wake up</em>.</td>
+</tr>
+<tr>
+<td>TV clock or player opens behind other windows</td>
+<td>Windows blocked it from taking focus</td>
+<td>Fixed in current builds (homefront keeps bringing it forward); update homefront.</td>
+</tr>
+<tr>
+<td>Lights jump while watching</td>
+<td>Two things changing the same lights</td>
+<td>Check which automation changed them (Home Assistant → Logbook). Follow-what's-playing only dims and stands aside during the sunset fade.</td>
+</tr>
+<tr>
+<td>Now playing is wrong or empty</td>
+<td>The app doesn't report to Windows and isn't making sound</td>
+<td><code>/api/pc/audio</code> (from the HTPC) lists which apps are making sound.</td>
+</tr>
+<tr>
+<td>No phone alerts</td>
+<td>Notifications off, quiet hours, or a push hiccup</td>
+<td>iPhone Settings → Notifications → Home Assistant; check the automation's trace in Home Assistant. A one-off push failure appears in Home Assistant's log as <em>Error sending notification</em>.</td>
+</tr>
+<tr>
+<td>Scripts missing in Shortcuts, widgets or the watch</td>
+<td>The Home Assistant app's local list is out of date</td>
+<td>Open the app and let it load, close it fully, reopen Shortcuts; or Settings → Companion App → Debugging and reset its cache. Meanwhile use <strong>Perform Action</strong> with the script's name.</td>
+</tr>
+<tr>
+<td>Tailscale keeps switching on at home</td>
+<td>The Home Assistant app doesn't know the home Wi-Fi</td>
+<td>Add the Wi-Fi's name under the app's Internal URL. Opening homefront from its icon also uses Tailscale, by design.</td>
+</tr>
+<tr>
+<td>Can't reach the house when away</td>
+<td>Tailscale off, or On Demand misconfigured</td>
+<td>On Demand set to <strong>Do nothing</strong>; the subnet route approved in the admin console.</td>
+</tr>
+<tr>
+<td>Paste does nothing</td>
+<td>The page isn't on HTTPS</td>
+<td>Open homefront from the Tailscale address; on the plain address, use the paste field that appears.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="logs-and-checks">Logs and checks</h2>
+<ul>
+<li>homefront: <code>data\homefront.log</code> next to <code>homefront.exe</code>.</li>
+<li>Home Assistant: Settings → System → Logs; each automation's <strong>Traces</strong> show exactly why it did or didn't run.</li>
+<li>Layout: <code>node tools/audit.mjs</code> against a test copy on port 8090. Test copies must run with automations off (<code>cinema.enabled</code>, prayer and camera notices <code>false</code>) so they can't touch the real lights.</li>
+</ul>
+<h2 id="known-limits">Known limits</h2>
+<ul>
+<li>An "HTPC offline" alert is impossible while Home Assistant runs on the HTPC itself; that needs a separate small device.</li>
+<li>Spotify and VLC don't report to Windows, so their titles come from their windows; a paused Spotify shows the last song seen.</li>
+<li>LG TV notices are text only.</li>
+<li>The ONVIF motion sensor appears after the camera's first motion event.</li>
+<li>Tuya bulbs depend on Tuya's cloud; an internet outage stops light control until it returns.</li>
+<li>iPhones report location every few hundred metres while driving, so the 1 km welcome can arrive a little later than 1 km.</li>
+</ul>
+</section>
+</body></html>

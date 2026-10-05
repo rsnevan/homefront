@@ -313,12 +313,56 @@ export function TvPanel() {
       </div>
       ${on && html`<button class=${'icon-btn' + (a.is_volume_muted ? ' on' : '')} aria-label=${a.is_volume_muted ? 'Unmute TV' : 'Mute TV'} onClick=${() => act('/api/tv/mute', { muted: !a.is_volume_muted })}><${Icon} name=${a.is_volume_muted ? 'volume-x' : 'volume-2'} /></button>`}
     </div>
-    ${on && html`<div style="margin-top:14px"><${Range} label="TV volume" value=${vol} showValue onInput=${setVol} onChange=${setVol} /></div>`}
+    ${on && html`<${VolumeStepper} label="TV volume" value=${vol} onSet=${setVol} />`}
     <div class="tv-row">
       <button class="chip" onClick=${() => act('/api/tv/pc', {}, 'Switched to the HTPC')}><${Icon} name="monitor" size=${16} />HTPC input</button>
       <button class="chip" onClick=${() => act('/api/tv/screen_off', {}, 'Screen off, sound stays on')}><${Icon} name="monitor-off" size=${16} />Screen off</button>
       <button class="chip" onClick=${() => act('/api/tv/screen_on', {})}><${Icon} name="monitor-play" size=${16} />Screen on</button>
       <${SleepChip} />
+    </div>`;
+}
+
+// Big − / + with the level in between: tap to step, hold to keep going, or tap the number and type one.
+export function VolumeStepper({ label, value, onSet, max = 100 }) {
+  const [pending, setPending] = useState(null);     // what we asked for, until the device reports it back
+  const [draft, setDraft] = useState(null);         // what's being typed
+  const pendingRef = useRef(null), timer = useRef(), settle = useRef();
+  const shown = pending ?? value ?? 0;
+
+  useEffect(() => { if (pending != null && value === pending) { setPending(null); pendingRef.current = null; } }, [value]);
+  useEffect(() => () => { clearTimeout(timer.current); clearInterval(timer.current); clearTimeout(settle.current); }, []);
+
+  const go = v => {
+    v = Math.max(0, Math.min(max, Math.round(v)));
+    pendingRef.current = v; setPending(v); onSet(v);
+    clearTimeout(settle.current);
+    settle.current = setTimeout(() => { pendingRef.current = null; setPending(null); }, 4000);   // give up waiting for the echo
+  };
+  const step = d => go((pendingRef.current ?? value ?? 0) + d);
+  const holdStart = (d, e) => {
+    e.preventDefault();
+    step(d);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => { timer.current = setInterval(() => step(d), 120); }, 400);
+  };
+  const holdEnd = () => { clearTimeout(timer.current); clearInterval(timer.current); };
+  const commit = () => { if (draft != null && draft !== '' && !isNaN(+draft)) go(+draft); setDraft(null); };
+
+  const Btn = ({ d, icon, name }) => html`
+    <button class="vol-step" aria-label=${name} onPointerDown=${e => holdStart(d, e)} onPointerUp=${holdEnd} onPointerLeave=${holdEnd} onPointerCancel=${holdEnd}
+      onKeyDown=${e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), step(d))}><${Icon} name=${icon} size=${26} /></button>`;
+
+  return html`
+    <div class="vol-stepper" role="group" aria-label=${label}>
+      <${Btn} d=${-1} icon="minus" name=${label + ' down'} />
+      <input class="vol-num-input num" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label=${label}
+        value=${draft ?? String(shown)}
+        onFocus=${e => { setDraft(String(shown)); requestAnimationFrame(() => e.target.select()); }}
+        onInput=${e => setDraft(e.target.value.replace(/\D/g, ''))}
+        onKeyDown=${e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } else if (e.key === 'Escape') { setDraft(null); e.target.blur(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); step(1); } else if (e.key === 'ArrowDown') { e.preventDefault(); step(-1); } }}
+        onBlur=${commit} />
+      <${Btn} d=${1} icon="plus" name=${label + ' up'} />
     </div>`;
 }
 

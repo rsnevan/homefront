@@ -636,7 +636,9 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 
 /* remote: live keyboard */
 .kbd { display: grid; gap: 10px; position: relative; }
-.kbd > .btn { justify-self: stretch; justify-content: center; }
+.kbd-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.kbd-row .btn { justify-content: center; }
+.paste-box { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
 .kbd-input { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; font-size: 16px; border: 0; padding: 0; pointer-events: none; }
 .kbd-extra { display: flex; flex-wrap: wrap; gap: 6px; }
 .kbd-extra .chip { min-width: 44px; justify-content: center; }
@@ -663,4 +665,13 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 /* remote: buttons view */
 .buttons-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 520px; }
 .keys .key { gap: 6px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* volume stepper: big − / + around an editable level */
+.vol-stepper { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; gap: 10px; align-items: center; margin-top: 14px; }
+.vol-step { height: 64px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--raised-2); display: grid; place-items: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.vol-step:hover { border-color: var(--line-2); }
+.vol-step:active { background: var(--accent); color: var(--on-accent); transform: scale(0.96); }
+.vol-num-input { height: 64px; width: 100%; min-width: 0; text-align: center; font-size: 30px; font-weight: 500; letter-spacing: -0.01em;
+  border-radius: var(--r-md); border: 1px solid var(--line); background: var(--raised); color: var(--text); padding: 0; }
+.vol-num-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 

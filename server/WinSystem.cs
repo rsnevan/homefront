@@ -210,6 +210,7 @@ public static class WinInput
         var list = new List<INPUT>();
         foreach (var ch in text)
         {
+            if (ch == '\r') continue;   // pasted "\r\n" line breaks: the \n does the Enter
             if (ch == '\n') { list.Add(Key(0x0D, false)); list.Add(Key(0x0D, true)); continue; }
             list.Add(new INPUT { type = 1, u = new() { ki = new() { wScan = ch, dwFlags = UNICODE } } });
             list.Add(new INPUT { type = 1, u = new() { ki = new() { wScan = ch, dwFlags = UNICODE | KEYUP } } });

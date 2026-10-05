@@ -176,14 +176,42 @@ function LiveKeyboard() {
   const Mod = ({ id, label }) => html`<button class="chip" aria-pressed=${mods[id]} onPointerDown=${e => e.preventDefault()} onClick=${() => setMods({ ...mods, [id]: !mods[id] })}>${label}</button>`;
   const K = ({ k, label, icon }) => html`<button class="chip" onPointerDown=${e => e.preventDefault()} onClick=${() => press(k)} aria-label=${label}>${icon ? html`<${Icon} name=${icon} size=${16} />` : label}</button>`;
 
+  // Paste the phone's clipboard onto the HTPC. Reading the clipboard needs HTTPS (the Tailscale address);
+  // otherwise show a real field to long-press and paste into.
+  const [pasteBox, setPasteBox] = useState(false);
+  const paste = async () => {
+    if (navigator.clipboard?.readText && window.isSecureContext) {
+      try {
+        const t = await navigator.clipboard.readText();
+        if (t) { send({ t: 'type', s: t }); toast(t.length > 40 ? `Pasted ${t.length} characters` : `Pasted "${t}"`); }
+        else toast('The clipboard is empty');
+        return;
+      } catch { /* refused or unsupported: fall back to the field */ }
+    }
+    setPasteBox(true);
+  };
+  const pasted = text => { if (text) { send({ t: 'type', s: text }); toast(text.length > 40 ? `Pasted ${text.length} characters` : `Pasted "${text}"`); } setPasteBox(false); };
+
   return html`
     <div class=${'kbd' + (open ? ' open' : '')}>
       <input ref=${inp} class="kbd-input" value=${SENTINEL} aria-label="Type on the HTPC"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"
         onBeforeInput=${beforeInput} onInput=${onInput} onKeyDown=${keyDown}
         onFocus=${() => setOpen(true)} onBlur=${() => setOpen(false)} />
-      <button class=${'btn' + (open ? ' primary' : '')} onPointerDown=${e => open && e.preventDefault()} onClick=${toggle}>
-        <${Icon} name="keyboard" size=${18} />${open ? 'Hide keyboard' : 'Keyboard'}</button>
+      <div class="kbd-row">
+        <button class=${'btn' + (open ? ' primary' : '')} onPointerDown=${e => open && e.preventDefault()} onClick=${toggle}>
+          <${Icon} name="keyboard" size=${18} />${open ? 'Hide keyboard' : 'Keyboard'}</button>
+        <button class="btn" onPointerDown=${e => open && e.preventDefault()} onClick=${paste}><${Icon} name="copy" size=${18} />Paste</button>
+      </div>
+      ${pasteBox && html`
+        <div class="paste-box">
+          <input class="input" autofocus placeholder="Long-press here and choose Paste" aria-label="Paste text to send to the HTPC"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            onPaste=${e => { e.preventDefault(); pasted(e.clipboardData?.getData('text') || ''); }}
+            onKeyDown=${e => { if (e.key === 'Enter') { e.preventDefault(); pasted(e.target.value); } }} />
+          <button class="btn" onClick=${e => pasted(e.currentTarget.previousElementSibling.value)}>Send</button>
+          <button class="icon-btn plain" aria-label="Close" onClick=${() => setPasteBox(false)}><${Icon} name="x" /></button>
+        </div>`}
       ${open && html`
         <div class="kbd-extra" aria-label="Extra keys">
           <${Mod} id="ctrl" label="Ctrl" /><${Mod} id="alt" label="Alt" /><${Mod} id="win" label="Win" />

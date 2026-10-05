@@ -31,7 +31,7 @@ public class AppConfig
     [
         new() { Name = "Netflix",  Url = "https://www.netflix.com/browse", Color = "#e50914" },
         new() { Name = "YouTube",  Url = "https://www.youtube.com/tv",       Color = "#ff0033" },
-        new() { Name = "DStv",     Url = "https://www.dstv.com/stream",      Color = "#0094ff" },
+        new() { Name = "DStv",     Url = "https://dstv.stream",               Color = "#0094ff" },
         new() { Name = "Showmax",  Url = "https://www.showmax.com",          Color = "#ff2d55" },
         new() { Name = "Disney+",  Url = "https://www.disneyplus.com",       Color = "#1f80e0" },
         new() { Name = "Prime",    Url = "https://www.primevideo.com",       Color = "#00a8e1" },

@@ -100,6 +100,8 @@ string? TvEntity()
     return ha.Entities.Keys.FirstOrDefault(k => k.StartsWith("media_player.lg_webos")) ?? ha.Entities.Keys.FirstOrDefault(k => k.StartsWith("media_player.") && k.Contains("tv"));
 }
 
+cinema.Suspended = () => ha.Entities.TryGetValue("input_boolean.sunset_fading", out var sf) && sf.GetProperty("state").GetString() == "on";
+
 apps.TvIsOn = () => ha.Connected && TvEntity() is { } tvId && ha.Entities.TryGetValue(tvId, out var tvState)
     ? tvState.GetProperty("state").GetString() is "on" or "playing" or "paused" or "idle"
     : null;
@@ -450,6 +452,7 @@ ha.CommandReceived += async d =>
                 break;
             // Home Assistant asked to switch the TV on (its webOS integration can't wake the TV by itself).
             case "tv_on": await apps.TvOn(); break;
+            case "cinema_resume": await cinema.Resume(); break;
             case "close_kiosk": await apps.CloseKiosk(); break;
             case "open": await apps.OpenUrl(S("url")); break;
             case "pause": await media.Control("pause"); hub.ToPlayers("cmd", new { cmd = "pause" }); break;

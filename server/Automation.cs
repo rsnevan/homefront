@@ -159,6 +159,7 @@ public class Cinema
     public string Mode => _applied;
     public event Action<string>? ModeChanged;
     public Func<string>? PlayerStatus;   // homefront kiosk player: "playing" | "paused" | "stopped"
+    public Func<bool>? Suspended;        // Home Assistant's sunset fade is running: hands off the lights
 
     public Cinema(Lights lights, ConfigStore cfg, WinMedia media)
     {
@@ -187,6 +188,7 @@ public class Cinema
         var c = _cfg.Value.Cinema;
         if (!c.Enabled && want != "idle") return;
         if (want == _applied) return;
+        if (Suspended?.Invoke() == true && _saved == null) return;   // the fade owns the lights; Resume() picks up after
         try
         {
             var ids = _lights.InRooms(c.Rooms);
@@ -220,6 +222,9 @@ public class Cinema
     }
 
     void SetMode(string m) { _applied = m; ModeChanged?.Invoke(m); }
+
+    /// The sunset fade handed over (a new video started): apply whatever is playing now.
+    public Task Resume() => Apply(_pending);
 
     /// Someone changed a cinema-room light while something is playing (a scene like Late night, the app,
     /// the wall switch): that becomes the state to come back to, and the level dimming never goes above.

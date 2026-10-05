@@ -58,7 +58,9 @@ public class WinMedia
 
     public async Task Start()
     {
-        _ = Task.Run(SampleAudio);
+        // Its own thread: on the shared pool a busy moment could delay sampling past the grace period,
+        // which looked like silence and briefly flipped playing videos to "paused".
+        new Thread(SampleAudio) { IsBackground = true, Name = "audio sampler" }.Start();
         try
         {
             _mgr = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync();
@@ -70,7 +72,9 @@ public class WinMedia
         catch (Exception e) { Log.Warn($"Media sessions unavailable: {e.Message}"); }
     }
 
-    async Task SampleAudio()
+    DateTime _sampledAt = DateTime.UtcNow;
+
+    void SampleAudio()
     {
         while (true)
         {
@@ -79,13 +83,15 @@ public class WinMedia
                 var now = DateTime.UtcNow;
                 foreach (var (pid, peak) in WinAudio.SessionPeaks())
                     if (peak > 0.0015f) _loudAt[pid] = now;
+                _sampledAt = now;
             }
             catch { }
-            await Task.Delay(250);
+            Thread.Sleep(250);
         }
     }
 
-    bool Loud(int pid) => _loudAt.TryGetValue(pid, out var at) && DateTime.UtcNow - at < Grace;
+    // Measured against the last successful sample, not the wall clock: if sampling stalls, nothing goes quiet.
+    bool Loud(int pid) => _loudAt.TryGetValue(pid, out var at) && _sampledAt - at < Grace;
 
     string WindowStatus(PlayerWin w) =>
         _override.TryGetValue(w.Key, out var o) && o.until > DateTime.UtcNow ? o.status : Loud(w.Pid) ? "playing" : "paused";

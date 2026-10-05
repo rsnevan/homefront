@@ -195,8 +195,7 @@ public class WinMedia
         try { props = await s.TryGetMediaPropertiesAsync(); } catch { }
         var status = SessionStatus(s);
         var app = s.SourceAppUserModelId ?? "";
-        var isMusicApp = app.Contains("spotify", StringComparison.OrdinalIgnoreCase);
-        var isVideo = info?.PlaybackType == Windows.Media.MediaPlaybackType.Video || (!isMusicApp && info?.PlaybackType != Windows.Media.MediaPlaybackType.Music);
+        var isVideo = IsVideoSession(app, info?.PlaybackType, props);
 
         string? artVersion = State.App == app ? State.ArtVersion : null;
         if (props?.Thumbnail != null && (props.Title != State.Title || State.App != app || Art == null))
@@ -217,6 +216,22 @@ public class WinMedia
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), artVersion,
             info?.Controls.IsPreviousEnabled ?? false, info?.Controls.IsNextEnabled ?? false,
             info?.Controls.IsPlaybackPositionEnabled ?? false));
+    }
+
+    // Only things you watch count as video (they drive follow-what's-playing and the sunset fade);
+    // music, games and calls don't.
+    static readonly string[] MusicApps = ["spotify", "applemusic", "itunes", "deezer", "tidal", "foobar", "amazonmusic", "ytmdesktop", "youtube-music"];
+    static readonly string[] Browsers = ["brave", "chrome", "msedge", "firefox", "opera", "vivaldi"];
+    static readonly string[] VideoApps = ["iptvnator", "vlc", "jellyfin", "plex", "kodi", "stremio", "mpv", "mpc-hc", "mpc-be", "potplayer", "smplayer", "zunevideo", "video.ui", "microsoft.media.player"];
+    static bool Has(string id, string[] list) => list.Any(x => id.Contains(x, StringComparison.OrdinalIgnoreCase));
+
+    static bool IsVideoSession(string app, Windows.Media.MediaPlaybackType? type, GlobalSystemMediaTransportControlsSessionMediaProperties? props)
+    {
+        if (Has(app, MusicApps)) return false;
+        if (type == Windows.Media.MediaPlaybackType.Video) return true;
+        // Chromium browsers report every tab as "music"; music sites (YouTube Music, Spotify Web...) fill in an album, video sites don't.
+        if (Has(app, Browsers)) return string.IsNullOrWhiteSpace(props?.AlbumTitle);
+        return Has(app, VideoApps);
     }
 
     void Publish(MediaState s)
@@ -313,7 +328,7 @@ public class WinMedia
             if (title != null) _lastTrack[key] = (title, artist);
             else if (_lastTrack.TryGetValue(key, out var last)) (title, artist) = last;
             var app = FriendlyApp(owner.ProcessName);
-            yield return new AudioApp(owner.ProcessName, app, title, artist, pid, !app.Equals("Spotify", StringComparison.OrdinalIgnoreCase));
+            yield return new AudioApp(owner.ProcessName, app, title, artist, pid, Has(owner.ProcessName, VideoApps) && !Has(owner.ProcessName, MusicApps));
         }
     }
 

@@ -264,3 +264,92 @@ export function Player() {
       ${upNext && html`<div class="upnext"><span style="color:rgba(230,236,244,.65)">Next episode in ${Math.max(0, Math.ceil((upNext.at - now.getTime()) / 1000))}s</span><b>Up next</b></div>`}
     </div>`;
 }
+
+// ================= routine (morning list on the TV) =================
+// Built for time blindness: the time left is always the biggest thing on screen, the current task has its own clock,
+// and the pace line says plainly whether you're on track.
+
+const routineCmd = (cmd, body = {}) => fetch('/api/routine/' + cmd, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const mins = ms => Math.max(0, Math.round(ms / 60000));
+// Long waits read better in hours: "1 h 35" rather than "95 min".
+const hm = m => m >= 90 ? [`${Math.floor(m / 60)} h ${pad(m % 60)}`, ''] : [String(m), ' min'];
+const mmss = s => `${Math.floor(Math.max(0, s) / 60)}:${pad(Math.floor(Math.max(0, s) % 60))}`;
+
+export function RoutineScreen() {
+  const s = useStore();
+  const now = useNow(1000);
+  const r = s.routine || {};
+  useEffect(() => {
+    const key = e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); routineCmd('done'); }
+      else if (e.key === 'Backspace') { e.preventDefault(); routineCmd('undo'); }
+      else if (e.key === 'Escape') fetch('/api/kiosk/close', { method: 'POST' });
+    };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, []);
+
+  if (!r.active) return html`<div class="routine"><div class="rt-empty"><div class="rt-now-name">Nothing on the list right now.</div></div></div>`;
+
+  const morning = r.kind === 'morning';
+  const leftMs = r.endsAt - now;
+  const left = mins(leftMs);
+  const tasks = r.tasks || [];
+  const cur = r.current >= 0 ? tasks[r.current] : null;
+  const curSecs = (now - r.currentSince) / 1000;
+  const remainingMins = tasks.reduce((a, t, i) => a + (t.done || i === r.current ? 0 : t.minutes), 0) + (cur ? Math.max(0, cur.minutes - curSecs / 60) : 0);
+  const readyAt = new Date(now.getTime() + remainingMins * 60000);
+  const slack = Math.round((r.endsAt - readyAt.getTime()) / 60000);
+  const span = Math.max(1, r.endsAt - r.started);
+  const used = Math.min(1, Math.max(0, (now - r.started) / span));
+  const projected = Math.min(1.15, Math.max(0, (readyAt - r.started) / span));
+  const urgency = left <= 5 ? 'hot' : left <= 15 ? 'warm' : '';
+  const doneCount = tasks.filter(t => t.done).length;
+
+  return html`
+    <div class=${'routine ' + urgency}>
+      <header class="rt-top">
+        <div>
+          <div class="rt-clock num">${hhmm(now)}</div>
+          <div class="rt-sub">${morning ? 'Leave by' : 'Bed at'} ${hhmm(new Date(r.endsAt))}${r.test ? '  (test)' : ''}</div>
+        </div>
+        <div class="rt-left">
+          <div class="rt-sub">${leftMs > 0 ? (morning ? 'Leave in' : 'Bed in') : (morning ? 'Time to leave' : 'Bedtime')}</div>
+          <div class="rt-left-n num">${hm(leftMs > 0 ? left : 0)[0]}<small>${hm(leftMs > 0 ? left : 0)[1]}</small></div>
+        </div>
+      </header>
+
+      <div class="rt-river" aria-hidden="true">
+        <b style=${`width:${used * 100}%`}></b>
+        ${cur && html`<i style=${`left:${Math.min(100, projected * 100)}%`}></i>`}
+      </div>
+      <div class=${'rt-pace ' + (slack < 0 ? 'behind' : '')}>
+        ${cur ? (slack >= 0 ? `On track: ready at ${hhmm(readyAt)}, ${hm(slack).join('')} to spare` : `Running ${-slack} min behind. Skip something, or go faster on ${cur.name.toLowerCase()}.`)
+              : morning ? `All done${leftMs > 0 ? `, ${left} min to spare` : ''}.` : 'All done. Sleep well.'}
+      </div>
+
+      <main class="rt-main">
+        <section class="rt-now">
+          ${cur ? html`
+            <div class="rt-label">Now</div>
+            <div class="rt-now-name">${cur.name}</div>
+            <div class="rt-timer num">${mmss(curSecs)}<span> of ${cur.minutes}:00</span></div>
+            <div class="rt-bar"><b class=${curSecs / 60 > cur.minutes ? 'over' : ''} style=${`width:${Math.min(100, curSecs / 60 / cur.minutes * 100)}%`}></b></div>
+            <div class="rt-hint">Enter when done · Backspace to undo</div>`
+          : html`
+            <div class="rt-label">${morning ? 'Ready' : 'Done'}</div>
+            <div class="rt-now-name">${morning ? 'Out the door.' : 'Lights out.'}</div>`}
+        </section>
+        <ol class="rt-list" aria-label=${`${doneCount} of ${tasks.length} done`}>
+          ${tasks.map((t, i) => ({ t, i })).slice(Math.max(0, Math.min((r.current < 0 ? tasks.length : r.current) - 2, tasks.length - 5)), Math.max(0, Math.min((r.current < 0 ? tasks.length : r.current) - 2, tasks.length - 5)) + 5).map(({ t, i }) => html`<li class=${(t.done ? 'done' : '') + (i === r.current ? ' cur' : '')}>
+            <span class="rt-tick">${t.done ? '✓' : ''}</span><span class="rt-name">${t.name}</span><span class="rt-min num">${t.minutes} min</span></li>`)}
+        </ol>
+      </main>
+
+      ${r.remember?.length > 0 && html`
+        <footer class=${'rt-remember' + (left <= 15 ? ' on' : '')}>
+          <span class="rt-label">Don't forget</span>
+          ${r.remember.map(x => html`<span class="rt-chip">${x}</span>`)}
+        </footer>`}
+    </div>`;
+}

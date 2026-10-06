@@ -6,7 +6,7 @@ import { Remote } from './views/remote.mjs';
 import { Library } from './views/library.mjs';
 import { LightsView } from './views/lights.mjs';
 import { Settings } from './views/settings.mjs';
-import { Ambient, Player } from './views/tv.mjs';
+import { Ambient, RoutineScreen, Player } from './views/tv.mjs';
 
 const NAV = [
   ['/', 'house', 'Home'],
@@ -83,6 +83,7 @@ function App() {
   if (me === undefined) return null;
   if (!me.role) return html`<${Login} onDone=${check} expired=${new URLSearchParams(location.search).get('guest') === 'expired'} />`;
   if (path === '/ambient') return html`<${Ambient} />`;
+  if (path === '/routine') return html`<${RoutineScreen} />`;
   if (path === '/player') return html`<${Player} />`;
   if (path === '/share') return html`<${Share} />`;
 

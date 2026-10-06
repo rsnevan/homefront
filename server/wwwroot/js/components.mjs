@@ -292,6 +292,51 @@ function Controls({ np, ctl, playing, small, onTracks }) {
   </div>`;
 }
 
+// ================= routine (opt-in morning / evening) =================
+
+export function RoutineCard() {
+  const s = useStore();
+  const now = useNow(15000);
+  const r = s.routine;
+  if (!r?.active) return null;
+  const go = (cmd, body) => api('/api/routine/' + cmd, body || {}).catch(e => toast(e.message, true));
+  const morning = r.kind === 'morning';
+  const left = Math.max(0, Math.round((r.endsAt - now) / 60000));
+  const tasks = r.tasks || [];
+  const cur = r.current >= 0 ? tasks[r.current] : null;
+  const onMins = Math.max(0, Math.floor((now - r.currentSince) / 60000));
+  if (r.phase === 'waking') return html`
+    <section class="panel rt-card span-12" aria-live="polite">
+      <div class="rt-card-top"><b class="h-sec">Good morning</b><span class="muted small">Leave by ${hhmm(new Date(r.endsAt))}</span></div>
+      <div class="rt-card-task">Are you up?</div>
+      <div class="rt-card-btns">
+        <button class="btn primary" onClick=${() => go('up')}>I'm up</button>
+        <button class="btn" onClick=${() => go('snooze')}>5 more minutes</button>
+      </div>
+    </section>`;
+  return html`
+    <section class="panel rt-card span-12" aria-live="polite">
+      <div class="rt-card-top">
+        <span class=${'rt-card-left' + (left <= 15 ? ' warm' : '')}>${left > 0 ? `${morning ? 'Leave' : 'Bed'} in ${left >= 90 ? `${Math.floor(left / 60)} h ${left % 60} min` : `${left} min`}` : morning ? 'Time to leave' : 'Bedtime'}</span>
+        <span class="muted small">${tasks.filter(t => t.done).length} of ${tasks.length} done${r.test ? ' (test)' : ''}</span>
+      </div>
+      <div class="rt-steps" aria-hidden="true">${tasks.map((t, i) => html`<i class=${t.done ? 'done' : i === r.current ? 'cur' : ''}></i>`)}</div>
+      ${cur ? html`
+        <div><div class="muted small">Now, ${onMins} of ${cur.minutes} min</div><div class="rt-card-task">${cur.name}</div></div>
+        <div class="rt-card-btns">
+          <button class="btn primary" onClick=${() => go('done')}><${Icon} name="check" size=${18} />Done</button>
+          <button class="btn" onClick=${() => go('skip')}>Skip</button>
+        </div>`
+      : html`<div class="rt-card-task">${morning ? 'All done. Out the door.' : 'All done. Sleep well.'}</div>
+             ${morning && r.remember?.length > 0 && html`<div class="muted">Grab: ${r.remember.join(', ')}</div>`}`}
+      <div class="row wrap" style="gap:8px">
+        ${s.kiosk !== 'routine' && html`<button class="chip" onClick=${() => act('/api/kiosk/routine', {})}><${Icon} name="tv" size=${16} />Show on the TV</button>`}
+        ${tasks.some(t => t.done) && html`<button class="chip" onClick=${() => go('undo')}><${Icon} name="rotate-ccw" size=${16} />Undo</button>`}
+        <button class="chip" onClick=${() => go('stop')}>End ${morning ? 'the morning list' : 'wind-down'}</button>
+      </div>
+    </section>`;
+}
+
 // ================= TV =================
 
 export function TvPanel() {

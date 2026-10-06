@@ -18,6 +18,7 @@ public class AppConfig
     public PcConfig Pc { get; set; } = new();
     public PlayerConfig Player { get; set; } = new();
     public CameraConfig Camera { get; set; } = new();
+    public RoutinesConfig Routines { get; set; } = new();
 
     public List<Room> Rooms { get; set; } =
     [

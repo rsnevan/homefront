@@ -29,7 +29,7 @@ export function Settings() {
   const save = async () => {
     setSaving(true);
     try {
-      await api('/api/settings', { homeName: cfg.homeName, ownerName: cfg.ownerName, location: cfg.location, prayer: cfg.prayer, cinema: cfg.cinema, rooms: cfg.rooms, shortcuts: cfg.shortcuts, tvPcInput: cfg.tvPcInput, player: cfg.player, camera: cfg.camera });
+      await api('/api/settings', { homeName: cfg.homeName, ownerName: cfg.ownerName, location: cfg.location, prayer: cfg.prayer, cinema: cfg.cinema, rooms: cfg.rooms, shortcuts: cfg.shortcuts, tvPcInput: cfg.tvPcInput, player: cfg.player, camera: cfg.camera, routines: cfg.routines });
       toast('Settings saved'); setDirty(false);
     } catch (e) { toast(e.message, true); } finally { setSaving(false); }
   };
@@ -136,6 +136,7 @@ export function Settings() {
         <p class="muted small" style="margin:0">Links open in Brave on the HTPC with your existing logins. Desktop apps work too: <span class="num">app:spotify</span>, <span class="num">app:iptvnator</span>, <span class="num">app:vlc</span>.</p>
       </section>
 
+      <${RoutinesSettings} r=${cfg.routines} set=${routines => upd({ routines })} dirty=${dirty} />
       <${Guests} />
       <${Account} username=${cfg.username} />
 
@@ -223,4 +224,102 @@ function Account({ username }) {
     </form>
     ${err && html`<div class="err">${err}</div>`}
   </section>`;
+}
+
+
+// ---------------- routines: opt-in help with mornings and evenings ----------------
+
+const WEEK = [['mon', 'Mon'], ['tue', 'Tue'], ['wed', 'Wed'], ['thu', 'Thu'], ['fri', 'Fri'], ['sat', 'Sat'], ['sun', 'Sun']];
+
+function Days({ days, onChange }) {
+  return html`<div class="row wrap" style="gap:8px" role="group" aria-label="Days">
+    ${WEEK.map(([k, n]) => html`<button class="chip" aria-pressed=${days.includes(k)} onClick=${() => onChange(days.includes(k) ? days.filter(x => x !== k) : WEEK.map(w => w[0]).filter(x => x === k || days.includes(x)))}>${n}</button>`)}
+  </div>`;
+}
+
+function Tasks({ tasks, onChange }) {
+  const put = (i, patch) => onChange(tasks.map((t, j) => j === i ? { ...t, ...patch } : t));
+  const total = tasks.reduce((a, t) => a + (+t.minutes || 0), 0);
+  return html`
+    <div class="list-edit">
+      ${tasks.map((t, i) => html`<div class="task-row">
+        <input class="input" aria-label="Step" placeholder="What needs doing" value=${t.name} onInput=${e => put(i, { name: e.target.value })} />
+        <input class="input num" aria-label=${`Minutes for ${t.name}`} type="number" min="1" max="120" value=${t.minutes} onInput=${e => put(i, { minutes: Math.max(1, +e.target.value || 1) })} />
+        <button class="icon-btn plain" aria-label="Move up" disabled=${i === 0} onClick=${() => { const a = [...tasks]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; onChange(a); }}><${Icon} name="chevron-up" /></button>
+        <button class="icon-btn plain" aria-label=${`Remove ${t.name}`} onClick=${() => onChange(tasks.filter((_, j) => j !== i))}><${Icon} name="trash-2" /></button>
+      </div>`)}
+    </div>
+    <div class="row between wrap" style="gap:8px">
+      <button class="btn sm" onClick=${() => onChange([...tasks, { name: '', minutes: 5 }])}><${Icon} name="plus" size=${16} />Add a step</button>
+      <span class="muted small">${tasks.length} steps, ${total} minutes in all</span>
+    </div>`;
+}
+
+function SetRow({ title, text, checked, onChange }) {
+  return html`<div class="set-row"><div class="txt"><b>${title}</b><span>${text}</span></div><${Toggle} label=${title} checked=${checked} onChange=${onChange} /></div>`;
+}
+
+function RoutinesSettings({ r, set, dirty }) {
+  const m = r.morning, e = r.evening;
+  const M = patch => set({ ...r, morning: { ...m, ...patch } });
+  const E = patch => set({ ...r, evening: { ...e, ...patch } });
+  const [remember, setRemember] = useState('');
+  const tasksMins = m.tasks.reduce((a, t) => a + (+t.minutes || 0), 0);
+  const toMin = hm => { const [h, mm] = hm.split(':').map(Number); return h * 60 + mm; };
+  const span = toMin(m.leaveBy) - toMin(m.upBy);
+  const test = kind => api('/api/routine/start-' + kind, {})
+    .then(() => toast(kind === 'morning' ? 'Morning list started on the TV (test)' : 'Wind-down started (test)'))
+    .catch(err => toast(err.message, true));
+  const addRemember = ev => {
+    ev.preventDefault();
+    const v = remember.trim();
+    if (v && !m.remember.includes(v)) M({ remember: [...m.remember, v] });
+    setRemember('');
+  };
+  return html`
+    <section class="panel set-sec" id="routines">
+      <h2 class="h-sec">Routines</h2>
+      <p class="muted small" style="margin:-8px 0 0">Help with getting going and with time slipping away. Built for ADHD brains, useful for anyone. Nothing here happens unless you switch it on.</p>
+
+      <${SetRow} title="Morning" text="Asks until you're up, puts your list and the time left on the TV, and says when to leave." checked=${m.enabled} onChange=${v => M({ enabled: v })} />
+      ${m.enabled && html`
+        <${Days} days=${m.days} onChange=${days => M({ days })} />
+        <div class="form-grid">
+          <div class="field"><label for="rt-up">Up by</label><input id="rt-up" class="input num" type="time" value=${m.upBy} onChange=${ev => ev.target.value && M({ upBy: ev.target.value })} /></div>
+          <div class="field"><label for="rt-leave">Leave by</label><input id="rt-leave" class="input num" type="time" value=${m.leaveBy} onChange=${ev => ev.target.value && M({ leaveBy: ev.target.value })} /></div>
+        </div>
+        ${span > 0 && tasksMins > span && html`<div class="err">Your steps add up to ${tasksMins} minutes, but there are only ${span} between up and leaving.</div>`}
+        <${SetRow} title="Keep asking until I'm up" text=${`A phone notification every ${m.askEveryMinutes} minutes from your up-by time, with I'm up and 5 more minutes. It can break through Focus.`} checked=${m.keepAsking} onChange=${v => M({ keepAsking: v })} />
+        ${m.keepAsking && html`
+          <div class="field" style="max-width:240px"><label for="rt-every">Ask every</label>
+            <select id="rt-every" class="input" value=${m.askEveryMinutes} onChange=${ev => M({ askEveryMinutes: +ev.target.value })}>${[3, 5, 10].map(n => html`<option value=${n}>${n} minutes</option>`)}</select></div>
+          <${SetRow} title="Then turn the bedroom lights up" text="From the second ask, the bedroom goes to full daylight." checked=${m.brightenBedroom} onChange=${v => M({ brightenBedroom: v })} />
+          <${SetRow} title="Moving around counts as up" text="Movement on the camera stops the asking." checked=${m.motionMeansUp} onChange=${v => M({ motionMeansUp: v })} />`}
+        <${SetRow} title="Morning list on the TV" text="Once you're up, the TV switches on with the clock, your steps and the time left. Enter ticks a step off." checked=${m.tvRunThrough} onChange=${v => M({ tvRunThrough: v })} />
+        <${SetRow} title="Time checks" text="Leave in 30, 15, 10 and 5 minutes, on the phone and the TV." checked=${m.timeChecks} onChange=${v => M({ timeChecks: v })} />
+        <h3 class="h-sec" style="font-size:15px;margin-top:6px">Steps, in order</h3>
+        <${Tasks} tasks=${m.tasks} onChange=${tasks => M({ tasks })} />
+        <h3 class="h-sec" style="font-size:15px;margin-top:6px">Don't forget</h3>
+        <div class="row wrap" style="gap:8px">
+          ${m.remember.map(x => html`<button class="chip" aria-label=${`Remove ${x}`} onClick=${() => M({ remember: m.remember.filter(y => y !== x) })}>${x}<${Icon} name="x" size=${14} /></button>`)}
+          <form class="row" style="gap:6px" onSubmit=${addRemember}>
+            <input class="input" style="width:150px;height:40px" placeholder="Add, e.g. Lunch" aria-label="Something to remember" value=${remember} onInput=${ev => setRemember(ev.target.value)} />
+            <button class="btn sm" type="submit">Add</button>
+          </form>
+        </div>
+        <div><button class="btn sm" disabled=${dirty} title=${dirty ? 'Save your changes first' : ''} onClick=${() => test('morning')}><${Icon} name="play" size=${16} />Try the morning list now</button></div>`}
+
+      <${SetRow} title="Evening wind-down" text="Softens the lights, shows what's left before bed, and says when it's time." checked=${e.enabled} onChange=${v => E({ enabled: v })} />
+      ${e.enabled && html`
+        <${Days} days=${e.days} onChange=${days => E({ days })} />
+        <div class="form-grid">
+          <div class="field"><label for="rt-wd">Wind down from</label><input id="rt-wd" class="input num" type="time" value=${e.windDownAt} onChange=${ev => ev.target.value && E({ windDownAt: ev.target.value })} /></div>
+          <div class="field"><label for="rt-bed">Bed at</label><input id="rt-bed" class="input num" type="time" value=${e.bedAt} onChange=${ev => ev.target.value && E({ bedAt: ev.target.value })} /></div>
+        </div>
+        <${SetRow} title="Soften the lights" text="Lights that are on go warm and no brighter than 35%." checked=${e.softenLights} onChange=${v => E({ softenLights: v })} />
+        <${SetRow} title="Time checks" text="Bed in 30, 15, 10 and 5 minutes." checked=${e.timeChecks} onChange=${v => E({ timeChecks: v })} />
+        <h3 class="h-sec" style="font-size:15px;margin-top:6px">Before bed</h3>
+        <${Tasks} tasks=${e.tasks} onChange=${tasks => E({ tasks })} />
+        <div><button class="btn sm" disabled=${dirty} title=${dirty ? 'Save your changes first' : ''} onClick=${() => test('evening')}><${Icon} name="play" size=${16} />Try the wind-down now</button></div>`}
+    </section>`;
 }

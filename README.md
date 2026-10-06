@@ -36,6 +36,8 @@ homefront runs on the HTPC that's plugged into the TV and becomes the one place 
 
 <p align="center"><img src="docs/screenshots/wake.png" width="520" alt="Wake-up light settings: time, fade length and days of the week"></p>
 
+- **Routines, for ADHD brains (opt-in).** From your up-by time your phone keeps asking *Are you up?* until you are, then the TV wakes with your morning list: the time left as the biggest thing on screen, the step you're on with its own timer, and whether you're on track. Time checks at 30, 15, 10 and 5 minutes before you leave say what to grab. An evening wind-down softens the lights and counts down to bed.
+
 ### The TV and the HTPC
 
 - **A remote that feels like a remote.** On a phone it opens as a big touchpad: drag to move, tap to click, two fingers or the edge strip to scroll, hold to right-click, tap-then-drag to drag. A live keyboard sends every key as you press it (with Ctrl, Alt, Win, arrows and F11 on hand), and **Paste** types your phone's clipboard into whatever is focused on the TV. A Screen tab mirrors the TV when you can't see it; a Buttons tab is a classic arrows-and-OK remote. Media and volume controls sit under every tab.

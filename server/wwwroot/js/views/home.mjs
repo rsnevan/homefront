@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { html, Icon, useStore, useNow, api, navigate, greeting, dateLong, hhmm, wx, prayerInfo, until, isOn } from '../lib.mjs';
-import { Plan, RoomSheet, SceneStrip, NowPlaying, TvPanel, PcPanel, Launch, Weather, Prayer, Tile, ItemSheet, CameraPanel } from '../components.mjs';
+import { RoutineCard, Plan, RoomSheet, SceneStrip, NowPlaying, TvPanel, PcPanel, Launch, Weather, Prayer, Tile, ItemSheet, CameraPanel } from '../components.mjs';
 
 let cachedShelf = null;
 
@@ -42,6 +42,7 @@ export function Home() {
     </header>
 
     <div class="home-grid">
+      <${RoutineCard} />
       <section class="span-8" aria-label="Home">
         <${Plan} onRoom=${setRoom} />
       </section>

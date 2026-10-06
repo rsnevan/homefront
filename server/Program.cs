@@ -32,6 +32,7 @@ var prayerWatch = new PrayerWatch(feeds, cfg, tvNotices, media, hub, apps, () =>
 bool Watching() => player.Status == "playing" || (media.State.Active && media.State.IsVideo && media.State.Status == "playing");
 var cameras = new Cameras(ha, cfg, tvNotices, hub, Watching);
 var bridge = new HaBridge(ha, media, jf, sleepTimer, () => player.Status);
+var routines = new Routines(ha, cfg, apps, tvNotices, lights, hub, dataDir);
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = baseDir, WebRootPath = Path.Combine(baseDir, "wwwroot") });
 builder.Logging.ClearProviders();
@@ -81,6 +82,7 @@ object Snapshot(Principal who) => new
     screen = new { w = WinScreen.Size.w, h = WinScreen.Size.h },
     timer = sleepTimer.View(),
     cameras = cameras.Ids.ToList(),
+    routine = routines.View(),
 };
 
 object RoomsView()
@@ -319,6 +321,7 @@ app.MapPost("/api/kiosk/{page}", async (string page) =>
     switch (page)
     {
         case "ambient": await apps.OpenKiosk("ambient", "/ambient"); break;
+        case "routine": await apps.OpenKiosk("routine", "/routine"); break;
         case "close": await apps.CloseKiosk(); break;
         default: return Results.BadRequest();
     }
@@ -471,7 +474,7 @@ app.MapGet("/api/settings", async (HttpContext ctx) =>
     return Results.Ok(new
     {
         homeName = c.HomeName, ownerName = c.OwnerName, username = c.Auth.Username,
-        location = c.Location, prayer = c.Prayer, cinema = c.Cinema, rooms = c.Rooms, shortcuts = c.Shortcuts, player = c.Player, camera = c.Camera,
+        location = c.Location, prayer = c.Prayer, cinema = c.Cinema, rooms = c.Rooms, shortcuts = c.Shortcuts, player = c.Player, camera = c.Camera, routines = c.Routines,
         tvEntity = c.Ha.TvEntity, tvPcInput = c.Pc.TvPcInput,
         lights = lights.All.Select(l => new { id = l.GetProperty("entity_id").GetString(), name = l.GetProperty("attributes").TryGetProperty("friendly_name", out var n) ? n.GetString() : null }),
         status = new { ha = ha.Connected, haUrl = ha.BaseUrl, haVersion = ha.Version, jellyfin = await jf.Ping() },
@@ -491,6 +494,7 @@ app.MapPost("/api/settings", (HttpContext ctx, JsonElement body) =>
         if (Get<PrayerConfig>("prayer") is { } p) c.Prayer = p;
         if (Get<PlayerConfig>("player") is { } pl) c.Player = pl;
         if (Get<CameraConfig>("camera") is { } cam) c.Camera = cam;
+        if (Get<RoutinesConfig>("routines") is { } rt) c.Routines = rt;
         if (Get<CinemaConfig>("cinema") is { } ci) c.Cinema = ci;
         if (Get<List<Room>>("rooms") is { } r) c.Rooms = r.Where(x => !string.IsNullOrWhiteSpace(x.Name)).ToList();
         if (Get<List<Homefront.Shortcut>>("shortcuts") is { } s) c.Shortcuts = s.Where(x => !string.IsNullOrWhiteSpace(x.Name) && !string.IsNullOrWhiteSpace(x.Url)).ToList();
@@ -498,6 +502,15 @@ app.MapPost("/api/settings", (HttpContext ctx, JsonElement body) =>
     });
     hub.Broadcast("cinema", new { mode = cinema.Mode, enabled = cfg.Value.Cinema.Enabled, rooms = cfg.Value.Cinema.Rooms });
     return Results.Ok();
+});
+
+// ---------------- routines (opt-in: morning and evening) ----------------
+
+app.MapGet("/api/routine", () => Results.Ok(routines.View()));
+app.MapPost("/api/routine/{cmd}", async (HttpContext ctx, string cmd, RoutineReq? r) =>
+{
+    if (cmd.StartsWith("start") && !Who(ctx).IsOwner) return OwnerOnly(ctx);
+    return await routines.Command(cmd, r?.Index) ? Results.Ok() : Results.BadRequest(new { error = "No routine is running" });
 });
 
 app.MapPost("/api/settings/password", (HttpContext ctx, PasswordReq r) =>
@@ -573,6 +586,7 @@ _ = Task.Run(async () =>
             if (vs != (lastVol as string)) { lastVol = vs; hub.Broadcast("volume", v); }
             if (tick++ % 2 == 0) { Stats.Sample(); hub.Broadcast("stats", Stats.Current); }
             await sleepTimer.Tick();
+            await routines.Tick();
             if (tick % 10 == 0) await prayerWatch.Tick();
             await bridge.Tick(Stats.Current);
             await media.Refresh();
@@ -598,6 +612,7 @@ record TimerReq(int? Minutes);
 record VolReq(int? Level, bool? Muted);
 record OpenReq(string Url);
 record PlayReq(string Id, bool? FromStart);
+record RoutineReq(int? Index);
 record PasswordReq(string? Current, string? Next, string? Username);
 record TuyaStart(string UserCode);
 record TuyaPoll(string FlowId);

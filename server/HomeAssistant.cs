@@ -9,7 +9,7 @@ namespace Homefront;
 
 public class HomeAssistant
 {
-    static readonly HashSet<string> Domains = ["light", "media_player", "switch", "fan", "climate", "cover", "camera", "scene", "script", "input_boolean", "sun", "weather", "binary_sensor", "input_datetime", "input_text", "input_number", "schedule"];
+    static readonly HashSet<string> Domains = ["light", "media_player", "switch", "fan", "climate", "cover", "camera", "scene", "script", "input_boolean", "sun", "weather", "binary_sensor", "input_datetime", "input_text", "input_number", "schedule", "person"];
 
     readonly ConfigStore _cfg;
     readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
@@ -25,6 +25,7 @@ public class HomeAssistant
     public event Action<string, JsonElement?>? EntityChanged;
     public event Action<bool>? ConnectionChanged;
     public event Func<JsonElement, Task>? CommandReceived;
+    public event Action<string>? NotificationAction;   // a button on a phone notification
 
     public HomeAssistant(ConfigStore cfg) => _cfg = cfg;
 
@@ -76,6 +77,7 @@ public class HomeAssistant
         await Command(new JsonObject { ["type"] = "subscribe_events", ["event_type"] = "state_changed" });
         // Scripts and voice assistants in HA drive homefront by firing this event.
         await Command(new JsonObject { ["type"] = "subscribe_events", ["event_type"] = "homefront_command" });
+        await Command(new JsonObject { ["type"] = "subscribe_events", ["event_type"] = "mobile_app_notification_action" });
         Log.Info($"HA connected at {url} (v{Version}), {Entities.Count} entities");
         SetConnected(true);
         await pump;
@@ -102,6 +104,11 @@ public class HomeAssistant
                 {
                     var copy = data.Clone();
                     _ = Task.Run(() => CommandReceived?.Invoke(copy));
+                    continue;
+                }
+                if (ev.GetProperty("event_type").GetString() == "mobile_app_notification_action")
+                {
+                    if (data.TryGetProperty("action", out var act) && act.GetString() is { } a) _ = Task.Run(() => NotificationAction?.Invoke(a));
                     continue;
                 }
                 var id = data.GetProperty("entity_id").GetString()!;

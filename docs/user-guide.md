@@ -62,6 +62,22 @@ Your films and series. Search, browse, and tap a title for details, seasons and 
 
 ![Wake-up light](screenshots/wake.png)
 
+## Routines (opt-in)
+
+Help with getting going and with time slipping away, built for ADHD brains and useful for anyone. Nothing happens until you switch it on in **Settings → Routines**.
+
+**Morning**
+
+1. **From your up-by time**, your phone asks *Are you up?* with **I'm up** and **5 more minutes**, every few minutes until you answer. It can break through Focus. From the second ask the bedroom goes to full daylight, and moving around in front of the camera counts as up.
+2. **Once you're up**, the TV switches on with your morning list: the clock, the time left to leave as the biggest thing on screen, a bar that drains towards your leave-by time, the step you're on with its own timer, and a line that says plainly whether you're on track ("ready at 07:52, 8 min to spare") or behind.
+3. **Tick steps off** with Enter on the TV keyboard, **Done** on the phone card at the top of Home, or the button on the notification when a step runs long. Backspace or **Undo** takes one back.
+4. **Time checks** arrive at 30, 15, 10 and 5 minutes before you leave, on the phone and the TV, and the last ones list what to grab (keys, wallet, phone).
+5. **Leaving the house** ends the list.
+
+**Evening wind-down** softens the lights that are on, lists what's left before bed (meds, clothes for tomorrow, phone on charge) and counts down to bedtime.
+
+Set the days, times, steps (with minutes each) and the don't-forget list in Settings. **Try the morning list now** runs a test without waiting for tomorrow.
+
 ## The TV clock
 
 **Ambient on TV** (HTPC card) turns the TV into a quiet clock with the weather, the next prayer time and a small floor plan. Underneath is a row of things to continue watching, or what's new if you're not in the middle of anything.
@@ -86,6 +102,7 @@ It also closes from homefront (**Close ambient** on the HTPC card) or the *Close
 | Your wake-up time | The bedroom has faded up to daylight. |
 | Motion on the camera | A phone alert with a snapshot (while you're out, always; at home, outside quiet hours) and a notice on the TV. |
 | Something new arrives in the library | A phone alert. |
+| Your up-by time, if Routines are on | The phone asks until you're up; then the morning list on the TV. |
 
 Quiet hours are 23:00 to 07:00: routine alerts wait until morning; motion while nobody's home always comes through.
 

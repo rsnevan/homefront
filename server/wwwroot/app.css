@@ -675,3 +675,58 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   border-radius: var(--r-md); border: 1px solid var(--line); background: var(--raised); color: var(--text); padding: 0; }
 .vol-num-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
+
+/* routine screen (TV): time left is always the biggest thing */
+.routine { position: fixed; inset: 0; background: var(--bg); color: var(--text); padding: 6vh 5vw 5vh; display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 2.2vh; overflow: hidden; }
+.routine .num { font-variant-numeric: tabular-nums; }
+.rt-top { display: flex; justify-content: space-between; align-items: flex-end; }
+.rt-clock { font-family: "Inter Tight", Inter, sans-serif; font-weight: 500; font-size: 9vw; line-height: .9; letter-spacing: -0.04em; }
+.rt-sub { color: var(--muted); font-size: 2vw; margin-top: 1vh; }
+.rt-left { text-align: right; }
+.rt-left-n { font-family: "Inter Tight", Inter, sans-serif; font-weight: 500; font-size: 9vw; line-height: .9; letter-spacing: -0.04em; }
+.rt-left-n small { font-size: 3vw; color: var(--muted); letter-spacing: 0; }
+.routine.warm .rt-left-n { color: var(--accent); }
+.routine.hot .rt-left-n { color: #ff8a65; }
+.rt-river { position: relative; height: 1.6vh; border-radius: 1vh; background: rgba(230, 236, 244, .08); }
+.rt-river b { position: absolute; inset: 0 auto 0 0; border-radius: 1vh; background: linear-gradient(90deg, rgba(255,201,77,.35), var(--accent)); }
+.rt-river i { position: absolute; top: -1vh; width: .5vw; height: 3.6vh; margin-left: -.25vw; border-radius: .3vw; background: var(--text); }
+.rt-pace { font-size: 2.1vw; color: var(--muted); }
+.rt-pace.behind { color: var(--accent); }
+.rt-main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 4vw; min-height: 0; }
+.rt-label { font-size: 1.6vw; color: var(--muted); }
+.rt-now-name { font-family: "Inter Tight", Inter, sans-serif; font-weight: 500; font-size: 6.4vw; line-height: 1; letter-spacing: -0.035em; margin-top: 1vh; }
+.rt-timer { font-size: 4vw; margin-top: 3vh; font-family: "Inter Tight", Inter, sans-serif; }
+.rt-timer span { color: var(--muted); font-size: 2.2vw; }
+.rt-bar { height: 1.3vh; border-radius: 1vh; background: rgba(230, 236, 244, .08); margin-top: 1.6vh; overflow: hidden; max-width: 46vw; }
+.rt-bar b { display: block; height: 100%; background: var(--accent); border-radius: 1vh; }
+.rt-bar b.over { background: #ff8a65; }
+.rt-hint { color: var(--faint, var(--muted)); font-size: 1.4vw; margin-top: 2.4vh; }
+.rt-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .7vh; align-content: start; overflow: hidden; }
+.rt-list li { display: grid; grid-template-columns: 3vw 1fr auto; align-items: center; gap: 1vw; padding: .9vh 1.4vw; border-radius: 1.2vw; border: 2px solid transparent; font-size: 1.8vw; }
+.rt-list li.cur { border-color: var(--accent); background: rgba(255, 201, 77, .08); }
+.rt-list li.done { color: var(--muted); }
+.rt-list li.done .rt-name { text-decoration: line-through; text-decoration-thickness: 2px; }
+.rt-tick { width: 2.2vw; height: 2.2vw; border-radius: .6vw; border: 2px solid var(--line-2); display: grid; place-items: center; font-size: 1.5vw; color: var(--on-accent); }
+.rt-list li.done .rt-tick { background: var(--accent); border-color: var(--accent); }
+.rt-min { color: var(--muted); font-size: 1.6vw; }
+.rt-remember { display: flex; align-items: center; gap: 1.2vw; flex-wrap: wrap; opacity: .55; }
+.rt-remember.on { opacity: 1; }
+.rt-chip { font-size: 2vw; padding: 1vh 1.6vw; border-radius: 999px; border: 2px solid var(--line-2); }
+.rt-remember.on .rt-chip { border-color: var(--accent); color: var(--accent); }
+.rt-empty { display: grid; place-items: center; height: 100%; color: var(--muted); }
+
+/* routine card (phone / home) */
+.rt-card { display: grid; gap: 14px; border-color: var(--accent) !important; }
+.rt-card .rt-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.rt-card .rt-card-left { font-family: "Inter Tight", Inter, sans-serif; font-size: clamp(24px, 7vw, 34px); font-weight: 500; letter-spacing: -0.02em; }
+.rt-card .rt-card-left.warm { color: var(--accent); }
+.rt-card .rt-card-task { font-family: "Inter Tight", Inter, sans-serif; font-size: 28px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; }
+.rt-card .rt-card-btns { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.rt-card .rt-card-btns .btn { height: 52px; justify-content: center; }
+.rt-steps { display: flex; gap: 4px; }
+.rt-steps i { flex: 1; height: 6px; border-radius: 3px; background: var(--line-2); }
+.rt-steps i.done { background: var(--accent); }
+.rt-steps i.cur { background: var(--text); }
+
+/* routine settings */
+.task-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px auto auto; gap: 8px; align-items: center; }

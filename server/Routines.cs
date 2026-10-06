@@ -58,7 +58,7 @@ public class RoutinesConfig
     public EveningConfig Evening { get; set; } = new();
     public string NotifyService { get; set; } = "";     // older single-phone setting, still honoured
     public List<string> Phones { get; set; } = [];       // notify services ("mobile_app_..."); empty = every phone
-    public bool LiveActivity { get; set; } = true;       // lock-screen countdown (iOS Live Activity / Android Live Update)
+    public bool LiveActivity { get; set; }               // lock-screen countdown (iOS Live Activity / Android Live Update); needs app support, so off by default
 }
 
 // ---------------- the engine ----------------

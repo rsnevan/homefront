@@ -284,7 +284,7 @@ function RoutinesSettings({ r, set, dirty, phones = [] }) {
       <div class="set-row"><div class="txt"><b>Send to</b><span>${phones.length ? 'Phones with the Home Assistant app signed in. None ticked means all of them.' : 'No phones yet: sign in to the Home Assistant app on a phone and it appears here.'}</span></div></div>
       ${phones.length > 0 && html`<div class="row wrap" style="gap:8px">${phones.map(p => html`<button class="chip" aria-pressed=${(r.phones || []).includes(p)}
         onClick=${() => set({ ...r, phones: (r.phones || []).includes(p) ? r.phones.filter(x => x !== p) : [...(r.phones || []), p] })}>${p.replace('mobile_app_', '').replace(/_/g, ' ')}</button>`)}</div>`}
-      <${SetRow} title="Countdown on the lock screen" text="A live timer to leave-by or bedtime with the step you're on: a Live Activity on iPhone (iOS 17.2+), a Live Update on Android 16+." checked=${r.liveActivity} onChange=${v => set({ ...r, liveActivity: v })} />
+      <${SetRow} title="Countdown on the lock screen" text="A live timer to leave-by or bedtime with the step you're on. Needs a Home Assistant app with Live Activities (iPhone) or Live Updates (Android 16+); if yours doesn't support them, these messages don't show at all, so leave this off." checked=${r.liveActivity} onChange=${v => set({ ...r, liveActivity: v })} />
 
       <${SetRow} title="Morning" text="Asks until you're up, puts your list and the time left on the TV, and says when to leave." checked=${m.enabled} onChange=${v => M({ enabled: v })} />
       ${m.enabled && html`

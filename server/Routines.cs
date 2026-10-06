@@ -56,7 +56,9 @@ public class RoutinesConfig
 {
     public MorningConfig Morning { get; set; } = new();
     public EveningConfig Evening { get; set; } = new();
-    public string NotifyService { get; set; } = "";     // e.g. "mobile_app_my_phone"; empty = the first phone found
+    public string NotifyService { get; set; } = "";     // older single-phone setting, still honoured
+    public List<string> Phones { get; set; } = [];       // notify services ("mobile_app_..."); empty = every phone
+    public bool LiveActivity { get; set; } = true;       // lock-screen countdown (iOS Live Activity / Android Live Update)
 }
 
 // ---------------- the engine ----------------
@@ -99,7 +101,7 @@ public class Routines
         try { File.WriteAllText(_ranFile, JsonSerializer.Serialize(_ranOn.ToDictionary(k => k.Key, k => k.Value.ToString("yyyy-MM-dd")))); } catch { }
     }
     DateTime _lastTick = DateTime.MinValue;
-    string? _notify;
+    List<string>? _allPhones; DateTime _phonesAt = DateTime.MinValue;
 
     static readonly int[] Checkpoints = [30, 15, 10, 5, 0];
 
@@ -228,6 +230,7 @@ public class Routines
     {
         var r = _run!; var m = _cfg.Value.Routines.Morning;
         r.Phase = "running"; r.Current = NextOpen(r, 0); r.CurrentSince = DateTime.Now;
+        await Live();
         if (r.Kind == "morning")
         {
             var left = (int)Math.Round((r.EndsAt - DateTime.Now).TotalMinutes);
@@ -259,6 +262,7 @@ public class Routines
         }
         var list = _run.Tasks.Count > 0 ? string.Join(", ", _run.Tasks.Select(t => t.Name)) + "." : "";
         await Notify($"Wind-down time. Bed at {bed:HH:mm}.", list, "hf-routine");
+        await Live();
         await _tv.Show($"Wind-down time. Bed at {bed:HH:mm}.");
         Changed();
     }
@@ -283,6 +287,7 @@ public class Routines
         }
         await Notify(title, body, "hf-routine", timeSensitive: minutes <= 5);
         await _tv.Show($"{title} {body}".Trim());
+        await Live();
         Changed();
     }
 
@@ -319,7 +324,7 @@ public class Routines
             case "skip": await Complete(index ?? r.Current, skipped: true); return true;
             case "undo":
                 var last = index ?? r.Done.DefaultIfEmpty(-1).Max();
-                if (last >= 0 && r.Done.Remove(last)) { r.Current = NextOpen(r, 0); r.CurrentSince = now; Changed(); }
+                if (last >= 0 && r.Done.Remove(last)) { r.Current = NextOpen(r, 0); r.CurrentSince = now; await Live(); Changed(); }
                 return true;
         }
         return false;
@@ -338,6 +343,7 @@ public class Routines
             await Notify(r.Kind == "morning" ? "All done." : "All done. Sleep well.",
                 r.Kind == "morning" ? (left > 0 ? $"{left} min to spare before you leave." : "Out the door.") : "", "hf-routine");
         }
+        await Live();
         Changed();
     }
 
@@ -347,6 +353,7 @@ public class Routines
         if (r == null) return;
         r.Phase = "done";
         if (message != null) await Notify("Morning", message, "hf-wake");
+        await Send(new JsonObject { ["message"] = "clear_notification", ["data"] = new JsonObject { ["tag"] = LiveTag } });
         if (_apps.KioskPage == "routine") await _apps.CloseKiosk();
         Log.Info($"routine: {r.Kind} finished");
         Changed();
@@ -371,32 +378,73 @@ public class Routines
     }
 
     // ---- phone notifications through Home Assistant's mobile app ----
-    async Task<string?> NotifyTarget()
+    /// Every phone with the Home Assistant app signed in ("mobile_app_..." notify services).
+    public async Task<List<string>> AllPhones()
     {
-        var conf = _cfg.Value.Routines.NotifyService;
-        if (!string.IsNullOrWhiteSpace(conf)) return conf.Replace("notify.", "");
-        if (_notify != null) return _notify;
+        if (_allPhones != null && DateTime.UtcNow - _phonesAt < TimeSpan.FromMinutes(10)) return _allPhones;
+        var list = new List<string>();
         try
         {
             var services = await _ha.Rest(HttpMethod.Get, "/api/services");
             foreach (var d in services.EnumerateArray())
                 if (d.GetProperty("domain").GetString() == "notify")
                     foreach (var svc in d.GetProperty("services").EnumerateObject())
-                        if (svc.Name.StartsWith("mobile_app_")) return _notify = svc.Name;
+                        if (svc.Name.StartsWith("mobile_app_")) list.Add(svc.Name);
+            _allPhones = list; _phonesAt = DateTime.UtcNow;
         }
-        catch (Exception e) { Log.Warn($"routine notify lookup: {e.Message}"); }
-        return null;
+        catch (Exception e) { Log.Warn($"routine phone lookup: {e.Message}"); }
+        return list;
+    }
+
+    async Task<List<string>> Targets()
+    {
+        var rc = _cfg.Value.Routines;
+        if (rc.Phones.Count > 0) return rc.Phones.Select(p => p.Replace("notify.", "")).ToList();
+        if (!string.IsNullOrWhiteSpace(rc.NotifyService)) return [rc.NotifyService.Replace("notify.", "")];
+        return await AllPhones();
+    }
+
+    async Task Send(JsonObject payload)
+    {
+        foreach (var target in await Targets())
+        {
+            try { await _ha.CallService("notify", target, payload.DeepClone()); }
+            catch (Exception e) { Log.Warn($"routine notify {target}: {e.Message}"); }
+        }
+    }
+
+    const string LiveTag = "hf_routine_live";
+
+    /// The lock-screen countdown: "Leave by 08:00", a timer ticking to it, the step you're on and how many are done.
+    /// The phone runs the timer itself, so this only needs sending when something changes.
+    async Task Live()
+    {
+        var r = _run;
+        if (r == null || r.Phase != "running" || !_cfg.Value.Routines.LiveActivity) return;
+        var morning = r.Kind == "morning";
+        var cur = r.Current >= 0 && r.Current < r.Tasks.Count ? r.Tasks[r.Current] : null;
+        var done = r.Done.Count;
+        var title = (r.Test ? "[Test] " : "") + (morning ? $"Leave by {r.EndsAt:HH:mm}" : $"Bed at {r.EndsAt:HH:mm}");
+        var message = cur != null ? $"Now: {cur.Name}. {done} of {r.Tasks.Count} done." : morning ? "All done. Out the door." : "All done. Sleep well.";
+        var data = new JsonObject
+        {
+            ["tag"] = LiveTag, ["live_update"] = true,
+            ["critical_text"] = cur?.Name ?? "Done",
+            ["progress"] = done, ["progress_max"] = Math.Max(1, r.Tasks.Count),
+            ["chronometer"] = true, ["when"] = new DateTimeOffset(r.EndsAt).ToUnixTimeSeconds(),
+            ["notification_icon"] = morning ? "mdi:run-fast" : "mdi:weather-night",
+            ["notification_icon_color"] = "#ffc94d", ["color"] = "#ffc94d",
+            ["alert_once"] = true, ["silent"] = true,
+        };
+        await Send(new JsonObject { ["title"] = title, ["message"] = message, ["data"] = data });
     }
 
     async Task Notify(string title, string message, string tag, bool timeSensitive = false, (string id, string title)[]? actions = null)
     {
         if (_run?.Test == true) title = "[Test] " + title;
-        var target = await NotifyTarget();
-        if (target == null) return;
         var data = new JsonObject { ["tag"] = tag };
         if (timeSensitive) data["push"] = new JsonObject { ["interruption-level"] = "time-sensitive" };
         if (actions != null) data["actions"] = new JsonArray(actions.Select(a => (JsonNode)new JsonObject { ["action"] = a.id, ["title"] = a.title }).ToArray());
-        try { await _ha.CallService("notify", target, new JsonObject { ["title"] = title, ["message"] = string.IsNullOrWhiteSpace(message) ? " " : message, ["data"] = data }); }
-        catch (Exception e) { Log.Warn($"routine notify: {e.Message}"); }
+        await Send(new JsonObject { ["title"] = title, ["message"] = string.IsNullOrWhiteSpace(message) ? " " : message, ["data"] = data });
     }
 }

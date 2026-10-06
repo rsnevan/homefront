@@ -475,7 +475,7 @@ app.MapGet("/api/settings", async (HttpContext ctx) =>
     {
         homeName = c.HomeName, ownerName = c.OwnerName, username = c.Auth.Username,
         location = c.Location, prayer = c.Prayer, cinema = c.Cinema, rooms = c.Rooms, shortcuts = c.Shortcuts, player = c.Player, camera = c.Camera, routines = c.Routines,
-        tvEntity = c.Ha.TvEntity, tvPcInput = c.Pc.TvPcInput,
+        tvEntity = c.Ha.TvEntity, tvPcInput = c.Pc.TvPcInput, phones = await routines.AllPhones(),
         lights = lights.All.Select(l => new { id = l.GetProperty("entity_id").GetString(), name = l.GetProperty("attributes").TryGetProperty("friendly_name", out var n) ? n.GetString() : null }),
         status = new { ha = ha.Connected, haUrl = ha.BaseUrl, haVersion = ha.Version, jellyfin = await jf.Ping() },
     });

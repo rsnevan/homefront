@@ -136,7 +136,7 @@ export function Settings() {
         <p class="muted small" style="margin:0">Links open in Brave on the HTPC with your existing logins. Desktop apps work too: <span class="num">app:spotify</span>, <span class="num">app:iptvnator</span>, <span class="num">app:vlc</span>.</p>
       </section>
 
-      <${RoutinesSettings} r=${cfg.routines} set=${routines => upd({ routines })} dirty=${dirty} />
+      <${RoutinesSettings} r=${cfg.routines} set=${routines => upd({ routines })} dirty=${dirty} phones=${cfg.phones} />
       <${Guests} />
       <${Account} username=${cfg.username} />
 
@@ -259,7 +259,7 @@ function SetRow({ title, text, checked, onChange }) {
   return html`<div class="set-row"><div class="txt"><b>${title}</b><span>${text}</span></div><${Toggle} label=${title} checked=${checked} onChange=${onChange} /></div>`;
 }
 
-function RoutinesSettings({ r, set, dirty }) {
+function RoutinesSettings({ r, set, dirty, phones = [] }) {
   const m = r.morning, e = r.evening;
   const M = patch => set({ ...r, morning: { ...m, ...patch } });
   const E = patch => set({ ...r, evening: { ...e, ...patch } });
@@ -280,6 +280,11 @@ function RoutinesSettings({ r, set, dirty }) {
     <section class="panel set-sec" id="routines">
       <h2 class="h-sec">Routines</h2>
       <p class="muted small" style="margin:-8px 0 0">Help with getting going and with time slipping away. Built for ADHD brains, useful for anyone. Nothing here happens unless you switch it on.</p>
+
+      <div class="set-row"><div class="txt"><b>Send to</b><span>${phones.length ? 'Phones with the Home Assistant app signed in. None ticked means all of them.' : 'No phones yet: sign in to the Home Assistant app on a phone and it appears here.'}</span></div></div>
+      ${phones.length > 0 && html`<div class="row wrap" style="gap:8px">${phones.map(p => html`<button class="chip" aria-pressed=${(r.phones || []).includes(p)}
+        onClick=${() => set({ ...r, phones: (r.phones || []).includes(p) ? r.phones.filter(x => x !== p) : [...(r.phones || []), p] })}>${p.replace('mobile_app_', '').replace(/_/g, ' ')}</button>`)}</div>`}
+      <${SetRow} title="Countdown on the lock screen" text="A live timer to leave-by or bedtime with the step you're on: a Live Activity on iPhone (iOS 17.2+), a Live Update on Android 16+." checked=${r.liveActivity} onChange=${v => set({ ...r, liveActivity: v })} />
 
       <${SetRow} title="Morning" text="Asks until you're up, puts your list and the time left on the TV, and says when to leave." checked=${m.enabled} onChange=${v => M({ enabled: v })} />
       ${m.enabled && html`

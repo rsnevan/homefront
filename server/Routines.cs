@@ -143,7 +143,13 @@ public class Routines
                 if (m.Enabled && m.Days.Contains(Dow(now)) && _ranOn.GetValueOrDefault("morning") != today)
                 {
                     var up = At(m.UpBy, now); var leave = At(m.LeaveBy, now);
-                    if (now >= up && now < leave) { MarkRan("morning", today); await StartMorning(up, leave, test: false); }
+                    if (now >= up && now < leave)
+                    {
+                        MarkRan("morning", today);
+                        // Only when you woke up at home: away for the night means no asking, no TV, nothing.
+                        if (SomeoneHome()) await StartMorning(up, leave, test: false);
+                        else Log.Info("routine: morning skipped, nobody home");
+                    }
                 }
                 var e = rc.Evening;
                 if (e.Enabled && e.Days.Contains(Dow(now)) && _ranOn.GetValueOrDefault("evening") != today)
@@ -193,6 +199,13 @@ public class Routines
             if (now > r.EndsAt.AddMinutes(grace)) await Finish(null);
         }
         catch (Exception ex) { Log.Warn($"routines: {ex.Message}"); }
+    }
+
+    // Anyone's person entity at home. With no people set up in Home Assistant, assume home.
+    bool SomeoneHome()
+    {
+        var people = _ha.Entities.Where(e => e.Key.StartsWith("person.")).ToList();
+        return people.Count == 0 || people.Any(e => e.Value.GetProperty("state").GetString() == "home");
     }
 
     static string LeftText(int left) => left > 0 ? $"{left} min left." : "Time's up.";

@@ -286,7 +286,7 @@ function RoutinesSettings({ r, set, dirty, phones = [] }) {
         onClick=${() => set({ ...r, phones: (r.phones || []).includes(p) ? r.phones.filter(x => x !== p) : [...(r.phones || []), p] })}>${p.replace('mobile_app_', '').replace(/_/g, ' ')}</button>`)}</div>`}
       <${SetRow} title="Countdown on the lock screen" text="A live timer to leave-by or bedtime with the step you're on. Needs a Home Assistant app with Live Activities (iPhone) or Live Updates (Android 16+); if yours doesn't support them, these messages don't show at all, so leave this off." checked=${r.liveActivity} onChange=${v => set({ ...r, liveActivity: v })} />
 
-      <${SetRow} title="Morning" text="Asks until you're up, puts your list and the time left on the TV, and says when to leave." checked=${m.enabled} onChange=${v => M({ enabled: v })} />
+      <${SetRow} title="Morning" text="Asks until you're up, puts your list and the time left on the TV, and says when to leave. Only on mornings you wake up at home." checked=${m.enabled} onChange=${v => M({ enabled: v })} />
       ${m.enabled && html`
         <${Days} days=${m.days} onChange=${days => M({ days })} />
         <div class="form-grid">

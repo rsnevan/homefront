@@ -68,7 +68,7 @@ Help with getting going and with time slipping away, built for ADHD brains and u
 
 **Morning**
 
-1. **From your up-by time**, your phone asks *Are you up?* with **I'm up** and **5 more minutes**, every few minutes until you answer. It can break through Focus. From the second ask the bedroom goes to full daylight, and moving around in front of the camera counts as up.
+1. **From your up-by time, if you woke up at home,** your phone asks *Are you up?* with **I'm up** and **5 more minutes**, every few minutes until you answer. It can break through Focus. From the second ask the bedroom goes to full daylight, and moving around in front of the camera counts as up.
 2. **Once you're up**, the TV switches on with your morning list: the clock, the time left to leave as the biggest thing on screen, a bar that drains towards your leave-by time, the step you're on with its own timer, and a line that says plainly whether you're on track ("ready at 07:52, 8 min to spare") or behind.
 3. **Tick steps off** with Enter on the TV keyboard, **Done** on the phone card at the top of Home, or the button on the notification when a step runs long. Backspace or **Undo** takes one back.
 4. **Time checks** arrive at 30, 15, 10 and 5 minutes before you leave, on the phone and the TV, and the last ones list what to grab (keys, wallet, phone).

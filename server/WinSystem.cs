@@ -179,6 +179,11 @@ public static class WinInput
 
     public static void MoveBy(double dx, double dy) => Send(Mouse(MOVE, (int)Math.Round(dx), (int)Math.Round(dy)));
 
+    /// Counts as activity without moving anything: a zero-length mouse move resets Windows' idle timer,
+    /// which is what LGTV Companion's idle blanking and the display sleep timer watch.
+    public static void Nudge() { Send(Mouse(MOVE, 0, 0)); SetThreadExecutionState(0x80000002); }
+    [DllImport("kernel32.dll")] static extern uint SetThreadExecutionState(uint flags);
+
     /// Absolute move in normalized [0,1] coordinates of the primary screen.
     public static void MoveTo(double nx, double ny)
     {

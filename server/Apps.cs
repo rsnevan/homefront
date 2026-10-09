@@ -35,6 +35,7 @@ public class Apps
     {
         ["spotify"] = ("Spotify", ["spotify:"]),
         ["iptvnator"] = ("IPTVnator", [@"%LOCALAPPDATA%\Programs\iptvnator\IPTVnator.exe", @"%ProgramFiles%\IPTVnator\IPTVnator.exe"]),
+        ["fredtv"] = ("open_tv", [@"%ProgramFiles%\Fred TV\open_tv.exe", @"%LOCALAPPDATA%\Programs\Fred TV\open_tv.exe"]),
         ["vlc"] = ("vlc", [@"%ProgramFiles%\VideoLAN\VLC\vlc.exe", @"%ProgramFiles(x86)%\VideoLAN\VLC\vlc.exe"]),
         ["jellyfin"] = ("Jellyfin Media Player", [@"%ProgramFiles%\Jellyfin\Jellyfin Media Player\JellyfinMediaPlayer.exe"]),
     };

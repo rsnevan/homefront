@@ -588,6 +588,8 @@ _ = Task.Run(async () =>
             await sleepTimer.Tick();
             await routines.Tick();
             if (tick % 10 == 0) await prayerWatch.Tick();
+            // While a video plays, keep the screen from blanking: idle blanking is for when nobody's watching.
+            if (tick % 40 == 0 && Watching()) WinInput.Nudge();
             await bridge.Tick(Stats.Current);
             await media.Refresh();
         }

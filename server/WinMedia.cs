@@ -222,7 +222,7 @@ public class WinMedia
     // music, games and calls don't.
     static readonly string[] MusicApps = ["spotify", "applemusic", "itunes", "deezer", "tidal", "foobar", "amazonmusic", "ytmdesktop", "youtube-music"];
     static readonly string[] Browsers = ["brave", "chrome", "msedge", "firefox", "opera", "vivaldi"];
-    static readonly string[] VideoApps = ["iptvnator", "vlc", "jellyfin", "plex", "kodi", "stremio", "mpv", "mpc-hc", "mpc-be", "potplayer", "smplayer", "zunevideo", "video.ui", "microsoft.media.player"];
+    static readonly string[] VideoApps = ["iptvnator", "open_tv", "fred", "vlc", "jellyfin", "plex", "kodi", "stremio", "mpv", "mpc-hc", "mpc-be", "potplayer", "smplayer", "zunevideo", "video.ui", "microsoft.media.player"];
     static bool Has(string id, string[] list) => list.Any(x => id.Contains(x, StringComparison.OrdinalIgnoreCase));
 
     static bool IsVideoSession(string app, Windows.Media.MediaPlaybackType? type, GlobalSystemMediaTransportControlsSessionMediaProperties? props)
@@ -255,6 +255,7 @@ public class WinMedia
         if (l.Contains("vlc")) return "VLC";
         if (l.Contains("jellyfin")) return "Jellyfin";
         if (l.Contains("iptvnator")) return "IPTVnator";
+        if (l.Contains("open_tv") || l.Contains("fredol")) return "Fred TV";
         var name = Path.GetFileNameWithoutExtension(id.Split('!')[0]);
         return string.IsNullOrEmpty(name) ? "PC" : char.ToUpper(name[0]) + name[1..];
     }

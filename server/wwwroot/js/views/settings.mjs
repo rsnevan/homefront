@@ -133,7 +133,7 @@ export function Settings() {
             <button class="icon-btn plain" aria-label=${`Remove ${sc.name}`} onClick=${() => upd({ shortcuts: cfg.shortcuts.filter((_, j) => j !== i) })}><${Icon} name="trash-2" /></button>
           </div>`)}
         </div>
-        <p class="muted small" style="margin:0">Links open in Brave on the HTPC with your existing logins. Desktop apps work too: <span class="num">app:spotify</span>, <span class="num">app:iptvnator</span>, <span class="num">app:vlc</span>.</p>
+        <p class="muted small" style="margin:0">Links open in Brave on the HTPC with your existing logins. Desktop apps work too: <span class="num">app:spotify</span>, <span class="num">app:fredtv</span>, <span class="num">app:iptvnator</span>, <span class="num">app:vlc</span>.</p>
       </section>
 
       <${RoutinesSettings} r=${cfg.routines} set=${routines => upd({ routines })} dirty=${dirty} phones=${cfg.phones} />

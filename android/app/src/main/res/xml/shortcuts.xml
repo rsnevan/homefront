@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="remote" android:icon="@drawable/sc_remote" android:shortcutShortLabel="@string/sc_remote">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.homefront" android:targetClass="app.homefront.MainActivity" android:data="homefront:/remote" />
+    </shortcut>
+    <shortcut android:shortcutId="lights" android:icon="@drawable/sc_lights" android:shortcutShortLabel="@string/sc_lights">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.homefront" android:targetClass="app.homefront.MainActivity" android:data="homefront:/lights" />
+    </shortcut>
+    <shortcut android:shortcutId="library" android:icon="@drawable/sc_library" android:shortcutShortLabel="@string/sc_library">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.homefront" android:targetClass="app.homefront.MainActivity" android:data="homefront:/library" />
+    </shortcut>
+    <shortcut android:shortcutId="setup" android:icon="@drawable/sc_settings" android:shortcutShortLabel="@string/sc_setup">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.homefront" android:targetClass="app.homefront.SetupActivity" />
+    </shortcut>
+</shortcuts>

@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">homefront</string>
+    <string name="w_now_playing">Now playing</string>
+    <string name="w_now_playing_desc">What\'s playing on the HTPC, with play, skip and volume</string>
+    <string name="w_scenes">Scenes</string>
+    <string name="w_scenes_desc">Movie, Evening, Late night, Goodnight and the rest in one tap</string>
+    <string name="w_lights">Rooms</string>
+    <string name="w_lights_desc">Every room\'s lights: tap to switch, − and + to dim</string>
+    <string name="w_tv">TV</string>
+    <string name="w_tv_desc">TV power, volume, mute and the PC input</string>
+    <string name="w_tv_desc_short">TV</string>
+    <string name="w_touchpad">Touchpad</string>
+    <string name="w_touchpad_desc">Opens a full touchpad for the HTPC; unlock it for quick clicks and scrolling right on the home screen</string>
+    <string name="sc_remote">Remote</string>
+    <string name="sc_lights">Lights</string>
+    <string name="sc_library">Library</string>
+    <string name="sc_setup">Connection</string>
+    <string name="live_channel">Live widgets</string>
+</resources>

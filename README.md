@@ -6,7 +6,7 @@
 
 <p align="center">
   A self-hosted control room for a living room built around a Windows HTPC.<br>
-  Lights, the TV, the media library and the PC itself, from any browser on any device.
+  Lights, the TV, the media library and the PC itself, from any browser on any device, or an Android app with home-screen widgets.
 </p>
 
 <p align="center">
@@ -55,6 +55,16 @@ homefront runs on the HTPC that's plugged into the TV and becomes the one place 
 
 ### Your phone, your watch, your car
 
+- **An Android app with home-screen widgets.** The whole of homefront in its own app, with no browser bars, and **Paste** on the remote works without HTTPS. Share a link from any app to open it on the TV. The widgets are what make it worth installing:
+  - **Lights:** every room glowing the colour its bulbs really are, with brightness as a bar in that colour, the kind of white (candlelight, warm, neutral, daylight or colour) and how many bulbs are on. Tap a room to switch it; − and + dim it in steps of 10%. *All off* sits in the corner.
+  - **TV:** power, volume one step at a time around the current level (tap the level to mute) and the PC input.
+  - **Touchpad:** opens a full-screen touchpad with the same gestures as the web remote, plus mouse buttons, the keyboard, arrow keys and media controls. Unlock the widget for quick clicks, nudges and scrolling right on the home screen; it locks again after 20 idle seconds, so brushing past it never clicks anything on the TV.
+  - **Now playing** and **Scenes** too.
+
+  While the screen is on, the widgets follow the house the moment anything changes, including changes made from the TV or another phone. With the screen off the connection closes, and it catches up when you wake the phone.
+
+<p align="center"><img src="docs/screenshots/android-widgets.jpg" width="300" alt="homefront widgets on an Android home screen: Lights with every room and its brightness, the TV strip with power and volume, and the Touchpad"></p>
+
 - **Alerts** through the Home Assistant app: camera motion with a snapshot, new episodes, a light that stopped responding, homefront not answering. Routine alerts wait out quiet hours (23:00–07:00); motion while nobody is home always comes through.
 - **Lights left on.** When you leave, your phone says which lights are still on, with *Turn everything off* and *Leave them on* buttons.
 - **Lock screen, Control Centre, Apple Watch, Siri and Assist** run any scene or action through Home Assistant scripts ("Hey Siri, movie time").
@@ -93,7 +103,7 @@ homefront runs on the HTPC that's plugged into the TV and becomes the one place 
 ## How it fits together
 
 ```
- phone / laptop / TV browser                      iPhone: Home Assistant app, Watch, CarPlay, Siri
+ phone / laptop / TV browser · Android app        iPhone: Home Assistant app, Watch, CarPlay, Siri
             │  HTTP + one WebSocket                          │  push alerts, scripts, location
             ▼                                                ▼
  ┌──────────── homefront.exe (HTPC desktop session) ────────────┐   ┌──── Home Assistant (VM on the HTPC) ────┐
@@ -115,6 +125,7 @@ homefront runs on the HTPC that's plugged into the TV and becomes the one place 
 - [Home Assistant](https://www.home-assistant.io/) on the network, with your lights and the TV integrated
 - Optional: [Jellyfin](https://jellyfin.org/) for the library and player
 - Optional: [LGTV Companion](https://github.com/JPersson77/LGTVCompanion) for LG TV power, input and screen-off
+- Optional: an Android 10+ phone for the app and its widgets
 - [Brave](https://brave.com/) on the HTPC for launching sites and the kiosk player (any Chromium browser works; set its path in `config.json`)
 
 ## Install
@@ -150,6 +161,20 @@ The short version is below; [docs/install.md](docs/install.md) walks through a w
 5. **Start at login:** put a shortcut to `homefront.exe` in `shell:startup`, and allow TCP 80 inbound on private networks in Windows Firewall.
 6. Open `http://<htpc-name>` and sign in with **admin / homefront**. **Change the password in Settings straight away.**
 
+### Android app
+
+1. **Build** it on a PC with the Android SDK (Android Studio brings one):
+   ```powershell
+   cd android
+   .\gradlew assembleRelease
+   ```
+   The address it suggests on first launch is `http://homefront.local`; put your HTPC's address in `android/local.properties` as `homefront.defaultUrl=http://…` to suggest that instead.
+2. **Install** with `adb install -r app\build\outputs\apk\release\app-release.apk`, over USB or wireless debugging. It needs Android 10 or later.
+3. **Open** homefront on the phone, confirm the address, and sign in as you would in a browser. The widgets use that same session.
+4. **Add widgets:** long-press the home screen, then *Widgets → homefront*. Every widget fits itself to the size you drag it to.
+
+The server doesn't need anything new: the app signs in through the web UI and its widgets read the same live socket. *Live widgets* can be switched off under *Connection* (long-press the app icon); the widgets then refresh every 15 minutes and whenever you tap them.
+
 ### Rooms and lights
 
 Rooms are matched by name: a bulb called *Kitchen 1* lands in Kitchen automatically. Anything else can be assigned in Settings. The first room is the large one on the floor plan and the default cinema room.
@@ -181,18 +206,22 @@ server/
   Apps.cs             browser launching, kiosk window, LGTV Companion and wake-on-LAN
   Feeds.cs            weather and prayer times
   wwwroot/            the app: index.html, app.css, js/ (Preact + htm, no build)
+android/              the Android app: the web UI in a WebView plus home-screen widgets (Glance)
 tools/
+  build-android-icons.mjs  turns the same Lucide icons into vector drawables for the widgets
   build-icons.mjs     bundles the Lucide icons the UI uses into js/icons.mjs
   screenshots.mjs     regenerates docs/screenshots with Playwright and Edge
   audit.mjs           layout audit: 134 page states across 9 screen sizes, from a 320 px phone to a 1080p TV
 docs/                 user guide, install, automations, remote access, troubleshooting
 ```
 
+The Android app is Kotlin with the widgets in Jetpack Glance. `Store.kt` keeps the server's state the way the web app does (snapshot plus patches off the socket) and boils it down to what the widgets show, so they redraw only when that changes; `LiveService.kt` holds the socket while the screen is on. After changing the web app's icon list, rerun `node tools/build-android-icons.mjs` from `tools/`.
+
 Front-end changes need no build: edit `server/wwwroot` and refresh. To regenerate the screenshots or run the audit, start a local instance on port 8090 with automations switched off, then run `node tools/screenshots.mjs` or `node tools/audit.mjs`.
 
 ## Credits
 
-[Preact](https://preactjs.com/), [htm](https://github.com/developit/htm), [hls.js](https://github.com/video-dev/hls.js), [Lucide](https://lucide.dev/) icons, [QRCoder](https://github.com/codebude/QRCoder), [Open-Meteo](https://open-meteo.com/), [Aladhan](https://aladhan.com/prayer-times-api), [LGTV Companion](https://github.com/JPersson77/LGTVCompanion).
+[Preact](https://preactjs.com/), [htm](https://github.com/developit/htm), [hls.js](https://github.com/video-dev/hls.js), [Lucide](https://lucide.dev/) icons, [QRCoder](https://github.com/codebude/QRCoder), [Open-Meteo](https://open-meteo.com/), [Aladhan](https://aladhan.com/prayer-times-api), [LGTV Companion](https://github.com/JPersson77/LGTVCompanion), [Jetpack Glance](https://developer.android.com/develop/ui/compose/glance), [OkHttp](https://square.github.io/okhttp/).
 
 ## License
 

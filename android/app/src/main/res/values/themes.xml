@@ -1,0 +1,16 @@
+<resources>
+    <color name="hf_bg">#F3F6FA</color>
+    <style name="Theme.Homefront" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowBackground">@color/hf_bg</item>
+        <item name="android:colorAccent">#B8860B</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    <style name="Theme.Homefront.Touchpad" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/hf_ink</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

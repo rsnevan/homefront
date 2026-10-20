@@ -29,6 +29,10 @@ Alerts never need the VPN: they arrive through Apple's or Google's push service.
 
 If you'd rather Tailscale only came on while driving, add **Tailscale → Connect** to the start of the *CarPlay connects* automation and **Tailscale → Disconnect** (after a 30-second wait) to the end of *CarPlay disconnects*.
 
+### Phones without Tailscale
+
+Tailscale is optional on each phone. Without it, put homefront on the home screen from `http://<htpc>`, and everything works on the home Wi-Fi. Alerts still arrive anywhere. Away from home, homefront, Home Assistant widgets and the actions on alerts can't reach the house, and the driving-home welcome waits until the phone joins the Wi-Fi. Paste uses the field that appears instead of reading the clipboard.
+
 ## More than one home
 
 Each home gets its own tailnet, owned by the household that lives there. Access between homes uses Tailscale **machine sharing**: the owner of a home shares just its HTPC with a named person (admin console → the machine → Share), and it appears in that person's tailnet beside their own devices.

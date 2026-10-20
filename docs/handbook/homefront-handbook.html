@@ -196,6 +196,18 @@ li { margin: 2pt 0; }
 <li><strong>Wake-up light.</strong> Choose when you want the bedroom fully bright, the days, and how long the fade takes (5 to 45 minutes), then switch it on. The bedroom glows dim and warm first and climbs to bright daylight.</li>
 </ul>
 <figure><img alt="Wake-up light" src="../screenshots/wake.png" /><figcaption>Wake-up light</figcaption></figure>
+<h2 id="routines-opt-in">Routines (opt-in)</h2>
+<p>Help with getting going and with time slipping away, built for ADHD brains and useful for anyone. Nothing happens until you switch it on in <strong>Settings → Routines</strong>.</p>
+<p><strong>Morning</strong></p>
+<ol>
+<li><strong>From your up-by time, if you woke up at home,</strong> your phone asks <em>Are you up?</em> with <strong>I'm up</strong> and <strong>5 more minutes</strong>, every few minutes until you answer. It can break through Focus. From the second ask the bedroom goes to full daylight, and moving around in front of the camera counts as up.</li>
+<li><strong>Once you're up</strong>, the TV switches on with your morning list: the clock, the time left to leave as the biggest thing on screen, a bar that drains towards your leave-by time, the step you're on with its own timer, and a line that says plainly whether you're on track ("ready at 07:52, 8 min to spare") or behind.</li>
+<li><strong>Tick steps off</strong> with Enter on the TV keyboard, <strong>Done</strong> on the phone card at the top of Home, or the button on the notification when a step runs long. Backspace or <strong>Undo</strong> takes one back.</li>
+<li><strong>Time checks</strong> arrive at 30, 15, 10 and 5 minutes before you leave, on the phone and the TV, and the last ones list what to grab (keys, wallet, phone).</li>
+<li><strong>Leaving the house</strong> ends the list.</li>
+</ol>
+<p><strong>Evening wind-down</strong> softens the lights that are on, lists what's left before bed (meds, clothes for tomorrow, phone on charge) and counts down to bedtime.</p>
+<p>Set the days, times, steps (with minutes each) and the don't-forget list in Settings. <strong>Try the morning list now</strong> runs a test without waiting for tomorrow.</p>
 <h2 id="the-tv-clock">The TV clock</h2>
 <p><strong>Ambient on TV</strong> (HTPC card) turns the TV into a quiet clock with the weather, the next prayer time and a small floor plan. Underneath is a row of things to continue watching, or what's new if you're not in the middle of anything.</p>
 <table>
@@ -261,6 +273,10 @@ li { margin: 2pt 0; }
 <tr>
 <td>Something new arrives in the library</td>
 <td>A phone alert.</td>
+</tr>
+<tr>
+<td>Your up-by time, if Routines are on</td>
+<td>The phone asks until you're up; then the morning list on the TV.</td>
 </tr>
 </tbody>
 </table>
@@ -431,8 +447,8 @@ netsh interface portproxy add v4tov4 listenport=8123 connectaddress=&lt;home ass
 <ol>
 <li>Install the Home Assistant app and sign in. Allow notifications and location <strong>Always</strong> with precise location.</li>
 <li>In the app: Settings → Companion App → the server → <strong>Internal URL</strong> → add the home Wi-Fi's name.</li>
-<li>Install Tailscale, sign in, and set On Demand to <strong>Do nothing</strong> for Wi-Fi and cellular.</li>
-<li>Open homefront at <code>https://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net</code> and add it to the home screen.</li>
+<li>Optional, for access away from home: install Tailscale, sign in, and set On Demand to <strong>Do nothing</strong> for Wi-Fi and cellular.</li>
+<li>Open homefront and add it to the home screen: at <code>https://&lt;htpc&gt;.&lt;tailnet&gt;.ts.net</code> with Tailscale, or <code>http://&lt;htpc&gt;</code> without it (home Wi-Fi only).</li>
 <li>Set up widgets, Control Centre, the watch, Siri and CarPlay (<a href="#your-phone-watch-and-car">User guide</a>).</li>
 </ol>
 <h2 id="11-check">11. Check</h2>
@@ -782,6 +798,8 @@ sequence:
 <li>Home Assistant widgets and watch complications, which can't always tell they're at home.</li>
 </ul>
 <p>If you'd rather Tailscale only came on while driving, add <strong>Tailscale → Connect</strong> to the start of the <em>CarPlay connects</em> automation and <strong>Tailscale → Disconnect</strong> (after a 30-second wait) to the end of <em>CarPlay disconnects</em>.</p>
+<h3 id="phones-without-tailscale">Phones without Tailscale</h3>
+<p>Tailscale is optional on each phone. Without it, put homefront on the home screen from <code>http://&lt;htpc&gt;</code>, and everything works on the home Wi-Fi. Alerts still arrive anywhere. Away from home, homefront, Home Assistant widgets and the actions on alerts can't reach the house, and the driving-home welcome waits until the phone joins the Wi-Fi. Paste uses the field that appears instead of reading the clipboard.</p>
 <h2 id="more-than-one-home">More than one home</h2>
 <p>Each home gets its own tailnet, owned by the household that lives there. Access between homes uses Tailscale <strong>machine sharing</strong>: the owner of a home shares just its HTPC with a named person (admin console → the machine → Share), and it appears in that person's tailnet beside their own devices.</p>
 <table>

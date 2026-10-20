@@ -89,8 +89,8 @@ Set Home Assistant's internal URL to its home address and its external URL to `h
 
 1. Install the Home Assistant app and sign in. Allow notifications and location **Always** with precise location.
 2. In the app: Settings → Companion App → the server → **Internal URL** → add the home Wi-Fi's name.
-3. Install Tailscale, sign in, and set On Demand to **Do nothing** for Wi-Fi and cellular.
-4. Open homefront at `https://<htpc>.<tailnet>.ts.net` and add it to the home screen.
+3. Optional, for access away from home: install Tailscale, sign in, and set On Demand to **Do nothing** for Wi-Fi and cellular.
+4. Open homefront and add it to the home screen: at `https://<htpc>.<tailnet>.ts.net` with Tailscale, or `http://<htpc>` without it (home Wi-Fi only).
 5. Set up widgets, Control Centre, the watch, Siri and CarPlay ([User guide](user-guide.md#your-phone-watch-and-car)).
 
 ## 11. Check
